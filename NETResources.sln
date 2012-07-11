@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NETResources", "NETResources\NETResources.csproj", "{4BB68EA8-8172-4B97-BC15-D6438C05C325}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4BB68EA8-8172-4B97-BC15-D6438C05C325}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BB68EA8-8172-4B97-BC15-D6438C05C325}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BB68EA8-8172-4B97-BC15-D6438C05C325}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BB68EA8-8172-4B97-BC15-D6438C05C325}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = NETResources\NETResources.csproj
+		Policies = $0
+		$0.TextStylePolicy = $1
+		$1.FileWidth = 120
+		$1.IndentWidth = 4
+		$1.inheritsSet = Mono
+		$1.inheritsScope = text/plain
+		$1.scope = text/plain
+	EndGlobalSection
+EndGlobal
