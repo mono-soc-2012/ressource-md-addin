@@ -36,6 +36,28 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
+		TreeIter SelectedIter {
+			get {
+				TreeIter iter;
+				if (entriesTreeView.Selection.GetSelected (out iter)) 
+					return iter;
+				return Gtk.TreeIter.Zero;
+			}
+		}
+
+		IStringResourceDisplay SelectedEntry {
+			get {
+				TreeIter iter = SelectedIter;
+				if (iter.Equals (Gtk.TreeIter.Zero))
+					return null;
+				if (entriesTreeView.Selection.IterIsSelected (iter))
+					return store.GetValue (iter, 0) as IStringResourceDisplay;
+				return null;
+			}
+		}
+
+		InserterRow Inserter = new InserterRow ();
+
 		public ResXEditorWidget ()
 		{
 			this.Build (); // in gui designer's partial class
@@ -76,26 +98,28 @@ namespace MonoDevelop.NETResources {
 			entriesTreeView = new MonoDevelop.Components.ContextMenuTreeView ();
 			entriesTreeView.ShowAll ();
 			entriesScrolledWindow.Add (entriesTreeView);
-			((MonoDevelop.Components.ContextMenuTreeView)entriesTreeView).DoPopupMenu = ShowPopup;
+			((MonoDevelop.Components.ContextMenuTreeView) entriesTreeView).DoPopupMenu = ShowPopup;
 
-			store = new ListStore (typeof (StringResourceEntry));
+			store = new ListStore (typeof (IStringResourceDisplay));
 
 			entriesTreeView.Model = store;
 			// setup columns
 
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Key", 0, keyDataFunc, keyEditHandler));
+			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Name", 0, nameDataFunc, nameEditHandler));
 			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("BaseValue", 1, baseValueDataFunc));
 			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Value", 2, valueDataFunc, valueEditHandler));
 			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Comment", 3, commentDataFunc, commentEditHandler));
+
+			entriesTreeView.Selection.Changed += OnEntrySelected;
 		}
 		
-		void keyEditHandler (object o, Gtk.EditedArgs args) 
+		void nameEditHandler (object o, Gtk.EditedArgs args) 
 		{
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
-			sre.Key = args.NewText;
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
+			sre.Name = args.NewText;
 		}
 
 		void valueEditHandler (object o, Gtk.EditedArgs args) 
@@ -103,7 +127,7 @@ namespace MonoDevelop.NETResources {
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			sre.Value = args.NewText;
 		}
 
@@ -111,39 +135,38 @@ namespace MonoDevelop.NETResources {
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			sre.Comment = args.NewText;
 		}
 
-		void keyDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
+		void nameDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
 			          TreeModel tree_model, TreeIter iter) 
 		{
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
-			((CellRendererText) cell).Text = sre.Key;
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
+			((CellRendererText) cell).Text = sre.Name;
 		}
 
 		void baseValueDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
 		                        TreeModel tree_model, TreeIter iter) 
 		{
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			((CellRendererText) cell).Text = sre.GetBaseString ();
 		}
 		
 		void valueDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
 		                    TreeModel tree_model, TreeIter iter) 
 		{
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			((CellRendererText) cell).Text = sre.Value;
 		}
 		
 		void commentDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
 		                      TreeModel tree_model, TreeIter iter) 
 		{
-			var sre = (StringResourceEntry) store.GetValue (iter, 0);
+			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			((CellRendererText) cell).Text = sre.Comment;
 		}
 
-		// FIXME: will need to take anon func instead of model Pos
 		TreeViewColumn GetEntriesTreeViewColumn (string title, int sortColumnId, TreeCellDataFunc treeCellDataFunc)
 		{
 			TreeViewColumn column = new TreeViewColumn ();
@@ -161,7 +184,6 @@ namespace MonoDevelop.NETResources {
 			return column;
 		}
 
-		// FIXME: will need to take anon func instead of model Pos
 		TreeViewColumn GetEntriesTreeViewColumn (string title, int sortColumnId, 
 		                                         TreeCellDataFunc treeCellDataFunc,
 		                                         EditedHandler editHandler)
@@ -192,16 +214,18 @@ namespace MonoDevelop.NETResources {
 
 		Gtk.Menu CreateContextMenu ()
 		{
-			//CatalogEntry entry = SelectedEntry;
-			//if (entry == null)
-			//	return null;
+			IStringResourceDisplay entry = SelectedEntry;
+			if (entry == null)
+				return null;
+			if (!(entry is ResourceEntry))
+				return null; // FIXME: if its InserterRow should clear its values?
 
 			Gtk.Menu result = new Gtk.Menu ();
 			
 			Gtk.MenuItem item = new Gtk.MenuItem (GettextCatalog.GetString ("Delete"));
-			//item.Sensitive = entry.References.Length == 0;
+			item.Sensitive = true;
 			item.Activated += delegate {
-				//RemoveEntry (entry);
+				RemoveEntry ((ResourceEntry) entry); 
 			};
 			item.Show();
 			result.Append (item);
@@ -209,24 +233,63 @@ namespace MonoDevelop.NETResources {
 			return result;
 		}
 
-		// called when catalog filtered
+		bool inserterWasSelected;
+		//handle InserterRow
+		void OnEntrySelected (object sender, EventArgs args)
+		{			
+			IStringResourceDisplay entry = SelectedEntry;
+			if (entry is InserterRow) {
+				inserterWasSelected = true;
+				entry.Name = "unique name here";
+			} else if (inserterWasSelected) {
+				inserterWasSelected = false;
+				if (Inserter.Name != null && ( Inserter.Value != null || Inserter.Comment != null))
+					InsertRow ();
+				else
+					Inserter.Reset ();
+			}
+		}
+
+		void InsertRow ()
+		{
+			//FIXME: should move some of this to catalog
+			StringResourceEntry newEntry = new StringResourceEntry (catalog, Inserter.Name, 
+			                                                    Inserter.Value, Inserter.Comment);
+			catalog.AddEntry (newEntry);
+			store.AppendValues (newEntry);
+			Inserter.Reset ();
+			UpdateFromCatalog ();
+		}
+
+		void RemoveEntry (ResourceEntry entry)
+		{
+			bool yes = MessageService.AskQuestion (GettextCatalog.GetString ("Do you really want to remove the resource {0}?", entry.Name),
+			                                                            AlertButton.Cancel, AlertButton.Remove) == AlertButton.Remove;
+			if (yes) {
+				Catalog.RemoveEntry (entry);
+				UpdateFromCatalog ();
+			}
+		}
+
 		string filter = String.Empty;
 		Regex  regex = new Regex (String.Empty);
+		// called on load and when catalog filtered
 		void UpdateFromCatalog ()
 		{
-			var newStore = new ListStore (typeof (StringResourceEntry));
+			var newStore = new ListStore (typeof (IStringResourceDisplay));
 
 			foreach (var re in Catalog) {
 				if (re is StringResourceEntry)
 					newStore.AppendValues (re);
 			}
 
+			newStore.AppendValues (Inserter);
 			entriesTreeView.Model = store = newStore;
 		}
 
 		#region Options
 		enum SearchIn {
-			Key,
+			Name,
 			BaseValue,
 			Value,
 			Comment,
@@ -297,13 +360,13 @@ namespace MonoDevelop.NETResources {
 			Menu sub = new Menu ();
 			searchInMenu.Submenu = sub;
 
-			Gtk.RadioMenuItem  key = null, baseValue = null, value =null, comment = null, all = null;
+			Gtk.RadioMenuItem  name = null, baseValue = null, value =null, comment = null, all = null;
 			GLib.SList group = new GLib.SList (IntPtr.Zero);
 
-			key = new Gtk.RadioMenuItem (group, GettextCatalog.GetString ("_Key"));
-			group = key.Group;
-			key.ButtonPressEvent += delegate { key.Activate (); };
-			sub.Append (key);
+			name = new Gtk.RadioMenuItem (group, GettextCatalog.GetString ("_Name"));
+			group = name.Group;
+			name.ButtonPressEvent += delegate { name.Activate (); };
+			sub.Append (name);
 			
 			baseValue = new Gtk.RadioMenuItem (group, GettextCatalog.GetString ("_Base Value"));
 			baseValue.ButtonPressEvent += delegate { baseValue.Activate (); };
@@ -334,8 +397,8 @@ namespace MonoDevelop.NETResources {
 			case SearchIn.Value:
 				value.Activate ();
 				break;
-			case SearchIn.Key:
-				key.Activate ();
+			case SearchIn.Name:
+				name.Activate ();
 				break;
 			case SearchIn.Comment:
 				comment.Activate ();
@@ -363,9 +426,9 @@ namespace MonoDevelop.NETResources {
 					menu.Destroy ();
 				}
 			};
-			key.Activated += delegate {
-				if (DoSearchIn != SearchIn.Key) {
-					DoSearchIn = SearchIn.Key;
+			name.Activated += delegate {
+				if (DoSearchIn != SearchIn.Name) {
+					DoSearchIn = SearchIn.Name;
 					UpdateFromCatalog ();
 					menu.Destroy ();
 				}
@@ -437,5 +500,29 @@ namespace MonoDevelop.NETResources {
 		}
 
     }
+	interface IStringResourceDisplay {
+		string Name {get; set;}
+		string Value {get; set;} 
+		string Comment {get; set;}
+		string GetBaseString ();
+	}
+
+	class InserterRow : IStringResourceDisplay {
+		#region IStringResourceDisplay implementation
+		public string Name {get; set; }
+		public string Value  { get; set; }
+		public string Comment  { get; set;}
+		#endregion
+		public string GetBaseString ()
+		{
+			return null;
+		}
+		public void Reset ()
+		{
+			Name = null; 
+			Value = null; 
+			Comment = null;
+		}
+	}
 }
 

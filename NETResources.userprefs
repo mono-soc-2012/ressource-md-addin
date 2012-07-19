@@ -1,22 +1,22 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResourceCatalog.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResXEditorWidget.cs">
     <Files>
-      <File FileName="NETResources/ResourceCatalog.cs" Line="18" Column="3" />
-      <File FileName="NETResources/ResourceEntry.cs" Line="1" Column="1" />
+      <File FileName="NETResources/ResourceCatalog.cs" Line="56" Column="19" />
+      <File FileName="NETResources/ResourceEntry.cs" Line="87" Column="4" />
       <File FileName="NETResources/ResXEditorDisplayBinding.cs" Line="1" Column="1" />
-      <File FileName="NETResources/ResXEditorView.cs" Line="1" Column="1" />
-      <File FileName="NETResources/ResXEditorWidget.cs" Line="1" Column="1" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/System.Resources/ResXDataNode.cs" Line="1" Column="1" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/System.Resources/ResXFileRef.cs" Line="1" Column="1" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/System.Resources/ResXResourceReader.cs" Line="1" Column="1" />
-      <File FileName="../../Documents/ResourceEditorProject/Resources/Properties/Resources.resx" Line="102" Column="31" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/Test/System.Resources/ResXResourceReaderTest.cs" Line="21" Column="1" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/Test/System.Resources/ResXFileRefTest.cs" Line="320" Column="4" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/Test/System.Resources/ResXDataNodeTest.cs" Line="1" Column="1" />
-      <File FileName="../../mono/mcs/class/Managed.Windows.Forms/Test/System.Windows.Forms/TestHelper.cs" Line="1" Column="1" />
+      <File FileName="NETResources/ResXEditorView.cs" Line="85" Column="3" />
+      <File FileName="NETResources/ResXEditorWidget.cs" Line="112" Column="4" />
     </Files>
     <Pads>
+      <Pad Id="ProjectPad">
+        <State expanded="True">
+          <Node name="NETResources" expanded="True">
+            <Node name="References" expanded="True" />
+            <Node name="ResXEditorWidget.cs" selected="True" />
+          </Node>
+        </State>
+      </Pad>
       <Pad Id="ClassPad">
         <State expanded="True">
           <Node name="NETResources" expanded="True">
@@ -31,6 +31,9 @@
             </Node>
           </Node>
         </State>
+      </Pad>
+      <Pad Id="MonoDevelop.Debugger.WatchPad">
+        <State />
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

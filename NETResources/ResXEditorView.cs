@@ -19,11 +19,9 @@ namespace MonoDevelop.NETResources {
 		{
 			catalog = new ResourceCatalog ();
 			resXEditorWidget = new ResXEditorWidget ();
-			//catalog.DirtyChanged += delegate (object sender, EventArgs args) {
-			//	IsDirty = catalog.IsDirty;
-			//};
-
-			//Load (resxFile);
+			catalog.DirtyChanged += delegate (object sender, EventArgs args) {
+				IsDirty = catalog.IsDirty;
+			};
 		}
 		
 		public override void Load (string fileName)
@@ -42,15 +40,15 @@ namespace MonoDevelop.NETResources {
 		
 		public override void Save (string fileName)
 		{
-			//OnBeforeSave (EventArgs.Empty);
-			//catalog.Save (fileName);
-			//ContentName = fileName;
-			//IsDirty = false;
+			OnBeforeSave (EventArgs.Empty);
+			catalog.Save (fileName);
+			ContentName = fileName;
+			IsDirty = false;
 		}
 		
 		public override void Save ()
 		{
-			//Save (this.ContentName);
+			Save (this.ContentName);
 		}
 		/*
 		#region IUndoHandler implementation

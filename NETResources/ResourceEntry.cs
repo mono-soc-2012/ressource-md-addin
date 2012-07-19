@@ -1,21 +1,28 @@
 using System;
 using System.Resources;
 using System.Reflection;
+using System.Text;
+using System.Drawing;
 
 namespace MonoDevelop.NETResources {
 	public abstract class ResourceEntry {
-
 		protected ResXDataNode node;
 
-		public string Key { 
+		public ResXDataNode Node {
+			get {	return node;	}
+		}
+		// to preserve order in resx
+		public Point RelativePos;
+
+		public string Name { 
 			get {
 				return node.Name;
 			} set {
-				// if (value != Key)
-				// 	if (Parent.BaseCatalog.HasKey (Key))
-				// 		throw new ArgumentException ("Key In Use")
+				// if (value != Name)
+				// 	if (Parent.BaseCatalog.HasName (Name))
+				// 		throw new ArgumentException ("Name In Use")
 				// 	else
-				if (Key != value) {		
+				if (Name != value) {		
 					node.Name = value;
 					MarkOwnerDirty ();
 				}
@@ -23,7 +30,7 @@ namespace MonoDevelop.NETResources {
 		}
 		public object GetValue ()
 		{ 
-			return node.GetValue (new AssemblyName[0]); //FIXME: assemblies referenced by current project
+			return node.GetValue ((AssemblyName []) null);
 		}
 		public string Comment { 
 			get {
@@ -36,56 +43,86 @@ namespace MonoDevelop.NETResources {
 			} 
 		}
 
-		public ResourceCatalog owner { get; set; }
+		public ResourceCatalog Owner { get; set; }
+
+		// FIXME: should this be a constructor? Note subclasses have different validation checks for node
+		protected void SetRelativePos ()
+		{
+			Point p = node.GetNodePosition (); // X is line, Y is column in resx file
+			if (p == Point.Empty) 
+				// ie new resource, these only added after existing resources loaded
+				RelativePos.X = Owner.MaxRelativeXPos + 1; 
+			else
+				RelativePos = p;
+		}
 
 		public virtual object GetBaseValue ()
 		{
-			// if (Parent.BaseCatalog.HasKey (Key))
-			// 	return Parent.BaseCatalog[Key].Value;
+			// if (Parent.BaseCatalog.HasName (Name))
+			// 	return Parent.BaseCatalog[Name].Value;
 			// else
 				return null; //FIXME: not implemented
 		}
 
 		protected void MarkOwnerDirty ()
 		{
-			if (owner != null)
-				owner.IsDirty = true;
+			if (Owner != null)
+				Owner.IsDirty = true;
 		}
 	}
 
-	public class StringResourceEntry : ResourceEntry {
-
-		public StringResourceEntry (string _key)
-		{
-			node = new ResXDataNode (_key, String.Empty);
-		}
+	public class StringResourceEntry : ResourceEntry, IStringResourceDisplay {
 
 		public string Value {
 			get {
 				return (string) base.GetValue();
 			} set {
 				if (Value != value) {
-					node = new ResXDataNode (Key, value);
+					ResXDataNode newNode = new ResXDataNode (Name, value);
+					newNode.Comment = node.Comment;
+					node = newNode;
 					MarkOwnerDirty ();
 				}
 			}
 		}
+		public StringResourceEntry (ResourceCatalog _owner, string _name, string _value, string _comment)
+		{
+			if (_name == null)
+				throw new ArgumentNullException ("name");
+			if (_name == String.Empty)
+				throw new ArgumentException ("name","Should not be empty");
+			if (_value == null)
+				throw new ArgumentNullException ("value");
+			if (!(_value is String))
+				throw new ArgumentException ("value", "Should be string resource");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
 
-		public StringResourceEntry (ResXDataNode _node)
+			Owner = _owner;
+			node = new ResXDataNode (_name, _value); //FIXME: perhaps shouldn't create node yet
+			node.Comment = _comment;
+			SetRelativePos ();
+		}
+
+		public StringResourceEntry (ResourceCatalog _owner, ResXDataNode _node)
 		{
 			if (_node == null)
-				throw new ArgumentNullException ("node cant be null");
+				throw new ArgumentNullException ("node");
 			if (!_node.GetValueTypeName (new AssemblyName [0]).StartsWith("System.String,")) //FIXME: assembly list
-				throw new ArgumentException ("string expected");
+				throw new ArgumentException ("node","Should be string resource");
 			if (_node.FileRef != null)
-				throw new ArgumentException ("fileref not expected");
+				throw new ArgumentException ("node", "FileRef should not be set");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
 
+			Owner = _owner;
 			node = _node;
+			SetRelativePos ();
 		}
 
 		public string GetBaseString ()
 		{
-			// if (Parent.BaseCatalog.HasKey (Key)) {
+			// if (Parent.BaseCatalog.HasName (Name)) {
 			object obj = GetBaseValue ();
 			if (obj is String)
 				return (string) obj;
@@ -95,29 +132,38 @@ namespace MonoDevelop.NETResources {
 	}
 
 	public class ObjectResourceEntry : ResourceEntry {
-
-		public ObjectResourceEntry (ResXDataNode _node)
+		public ObjectResourceEntry (ResourceCatalog _owner, ResXDataNode _node)
 		{
 			if (_node == null)
-				throw new ArgumentNullException ("node cant be null");
-			if (_node.GetValueTypeName (new AssemblyName [0]).StartsWith ("System.String,")) //FIXME: assembly list
-				throw new ArgumentException ("should be instantiating a String or FileRef object");
+				throw new ArgumentNullException ("node");
+			if (_node.GetValueTypeName ((AssemblyName []) null) == typeof (string).AssemblyQualifiedName)
+				throw new ArgumentException ("node", "Should not be string or file resource");
 			if (_node.FileRef != null)
-				throw new ArgumentException ("fileref not expected");
+				throw new ArgumentException ("node","FileRef should not be set");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
 
+			Owner = _owner;
 			node = _node;
+			SetRelativePos ();
 		}
 
-		public ObjectResourceEntry (string _key, object _value)
+		public ObjectResourceEntry (ResourceCatalog _owner, string _name, object _value)
 		{
-			if (_key == null)
-				throw new ArgumentNullException ("key cant be null");
+			if (_name == null)
+				throw new ArgumentNullException ("name");
+			if (_name == String.Empty)
+				throw new ArgumentException ("name","Name should not be empty");
 			if (_value == null)
-				throw new ArgumentNullException ("value cant be null");
+				throw new ArgumentNullException ("value");
 			if (_value is string)
-				throw new ArgumentException ("should be a String.... type");
+				throw new ArgumentException ("value","Should not be string resource type");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
 
-			node = new ResXDataNode (_key,_value);
+			Owner = _owner;
+			node = new ResXDataNode (_name,_value);
+			SetRelativePos ();
 		}
 	}
 
@@ -141,26 +187,56 @@ namespace MonoDevelop.NETResources {
 			} 
 		}
 
-		public FileRefResourceEntry (ResXDataNode _node)
+		public FileRefResourceEntry (ResourceCatalog _owner, ResXDataNode _node)
 		{
 			if (_node == null)
-				throw new ArgumentNullException ("node cant be null");
+				throw new ArgumentNullException ("node");
 			if (_node.FileRef == null)
-				throw new ArgumentException ("fileref expected");
+				throw new ArgumentNullException ("node","FileRef should be set");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
 
+			Owner = _owner;
 			node = _node;
+			SetRelativePos ();
 		}
 
-		public FileRefResourceEntry (string _key, string _fileName, string _typeName)
+		public FileRefResourceEntry (ResourceCatalog _owner, string _name, string _fileName, string _typeName)
 		{
-			if (_key == null)
-				throw new ArgumentNullException ("key cant be null");
+			if (_name == null)
+				throw new ArgumentNullException ("name");
+			if (_name == String.Empty)
+				throw new ArgumentException ("name","Name should not be empty");
 			if (_fileName == null)
-				throw new ArgumentNullException ("fileName cant be null");
+				throw new ArgumentNullException ("fileName");
 			if (_typeName == null)
-				throw new ArgumentNullException ("typeName cant be null");
+				throw new ArgumentNullException ("typeName");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
 
-			node = new ResXDataNode (_key, new ResXFileRef (_fileName, _typeName));
+			Owner = _owner;
+			node = new ResXDataNode (_name, new ResXFileRef (_fileName, _typeName));
+			SetRelativePos ();
+		}
+
+		public FileRefResourceEntry (ResourceCatalog _owner, string _name, string _fileName, string _typeName, Encoding _encoding)
+		{
+			if (_name == null)
+				throw new ArgumentNullException ("name");
+			if (_name == String.Empty)
+				throw new ArgumentException ("name", "Name should not be empty");
+			if (_fileName == null)
+				throw new ArgumentNullException ("fileName");
+			if (_typeName == null)
+				throw new ArgumentNullException ("typeName");
+			if (_encoding == null)
+				throw new ArgumentNullException ("encoding");
+			if (_owner == null)
+				throw new ArgumentNullException ("owner");
+
+			Owner = _owner;
+			node = new ResXDataNode (_name, new ResXFileRef (_fileName, _typeName, _encoding));
+			SetRelativePos ();
 		}
 	}
 }
