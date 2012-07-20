@@ -127,7 +127,7 @@ namespace MonoDevelop.NETResources {
 			if (obj is String)
 				return (string) obj;
 			else
-				return "Not A String in Base Resource File";// + obj.GetType ().ToString ();
+				return "(no base resource)";// + obj.GetType ().ToString ();
 		}
 	}
 

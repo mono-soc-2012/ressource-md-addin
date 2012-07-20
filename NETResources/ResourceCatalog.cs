@@ -44,10 +44,29 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
-
 		public ResourceCatalog () 
 		{
 
+		}
+
+		public bool IsUniqueName (string oldName, string newName, bool IsNew)
+		{
+			if (IsNew || (!IsNew && (oldName != newName)))
+				return !entriesList.Any (e=> e.Name == newName);
+			else
+				return true;
+		}
+
+		public string NextFreeName ()
+		{
+			string tempName;
+			int i = 0;
+			do {
+				i++;
+				tempName = "String" + i;
+			} while (entriesList.Any (e=> e.Name == tempName));
+
+			return tempName;
 		}
 
 		public void AddEntry (ResourceEntry entry)

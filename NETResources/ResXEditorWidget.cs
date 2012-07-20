@@ -15,12 +15,15 @@ using MonoDevelop.Ide.Gui.Components;
 using MonoDevelop.Ide;
 using System.ComponentModel;
 //using System.Threading;
+using MonoDevelop.Components;
 
 namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
 	public partial class ResXEditorWidget : Gtk.Bin {
 
 		static List<ResXEditorWidget> widgets = new List<ResXEditorWidget> (); 
+
+		StringEditorOptions options;
 
 		ListStore store;
 		ResourceCatalog catalog;
@@ -56,7 +59,11 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
-		InserterRow Inserter = new InserterRow ();
+		public SearchEntry SearchEntry {
+			get { return filterSearchEntry; }
+		}
+
+		InserterRow Inserter;
 
 		public ResXEditorWidget ()
 		{
@@ -70,7 +77,7 @@ namespace MonoDevelop.NETResources {
 			// if winforms global = enabled, default internal (vs doesnt give the no code gen option)
 
 			// AccessorCombo Onchange - persist option?
-
+			options = new StringEditorOptions (this);
 			SetupFilterSearchEntry ();
 			SetupEntriesTreeView ();
 		}
@@ -79,20 +86,19 @@ namespace MonoDevelop.NETResources {
 		{
 			filterSearchEntry.Entry.Text = String.Empty;
 			filterSearchEntry.Entry.Changed += delegate {
-				UpdateFromCatalog ();
+				options.Refresh ();
 			};
 
 			filterSearchEntry.Ready = true;
 			filterSearchEntry.Visible = true;
 			filterSearchEntry.ForceFilterButtonVisible = true;
 			filterSearchEntry.RequestMenu += delegate {
-				filterSearchEntry.Menu = CreateOptionsMenu ();
+				filterSearchEntry.Menu = options.CreateOptionsMenu ();
 			};
 		}
 
 		void SetupEntriesTreeView ()
 		{
-			// FIXME: makes use of ContextMenuTreeView subclass to add popup
 			entriesScrolledWindow.Remove (entriesTreeView);
 			entriesTreeView.Destroy ();
 			entriesTreeView = new MonoDevelop.Components.ContextMenuTreeView ();
@@ -105,24 +111,31 @@ namespace MonoDevelop.NETResources {
 			entriesTreeView.Model = store;
 			// setup columns
 
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Name", 0, nameDataFunc, nameEditHandler));
+			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Name", 0, nameDataFunc, nameEditedHandler));
 			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("BaseValue", 1, baseValueDataFunc));
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Value", 2, valueDataFunc, valueEditHandler));
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Comment", 3, commentDataFunc, commentEditHandler));
+			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Value", 2, valueDataFunc, valueEditedHandler));
+			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Comment", 3, commentDataFunc, commentEditedHandler));
 
 			entriesTreeView.Selection.Changed += OnEntrySelected;
+
+			store.SetSortColumnId (0, SortType.Ascending);
 		}
 		
-		void nameEditHandler (object o, Gtk.EditedArgs args) 
+		void nameEditedHandler (object o, Gtk.EditedArgs args) 
 		{
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
-			sre.Name = args.NewText;
+			if (ValidateName (sre.Name, args.NewText, (sre is InserterRow)))
+				sre.Name = args.NewText;
+			else {
+				lastinvalidPath = new TreePath (args.Path);
+				GLib.Idle.Add (KeepFocusOnInvalidName);
+			}
 		}
 
-		void valueEditHandler (object o, Gtk.EditedArgs args) 
+		void valueEditedHandler (object o, Gtk.EditedArgs args) 
 		{
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
@@ -131,7 +144,8 @@ namespace MonoDevelop.NETResources {
 			sre.Value = args.NewText;
 		}
 
-		void commentEditHandler (object o, Gtk.EditedArgs args) {
+		void commentEditedHandler (object o, Gtk.EditedArgs args) 
+		{
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
@@ -233,32 +247,70 @@ namespace MonoDevelop.NETResources {
 			return result;
 		}
 
-		bool inserterWasSelected;
-		//handle InserterRow
+		bool ValidateName (string oldName, string newName, bool IsInserter)
+		{
+			//oldName null if new record else an existing one is being renamed
+			if (String.IsNullOrEmpty (newName)) {
+				MessageService.ShowError (GettextCatalog.GetString ("Resource cant have an empty name."));
+				return false;
+			} else if (!Catalog.IsUniqueName (oldName, newName, IsInserter)) {
+				MessageService.ShowError (GettextCatalog.GetString ("A resource called {0} already exists.", newName));
+				return false;
+			} else
+				return true;
+		}
+
+		#region Funcs for Idle delegate
+		//FIXME: using fields for params as cant change method signiture
+		TreePath lastinvalidPath;
+
+		bool KeepFocusOnInvalidName ()
+		{
+			entriesTreeView.SetCursor (lastinvalidPath, entriesTreeView.Columns[0], true);
+			entriesTreeView.Selection.SelectPath (lastinvalidPath);
+			return false;
+		}
+
+		TreePath rowSelect;
+
+		bool ReturnToRowSelect ()
+		{
+
+			entriesTreeView.Selection.SelectPath (rowSelect);
+			entriesTreeView.ScrollToCell (rowSelect, entriesTreeView.Columns [0], true, 0, 0) ;
+			return false;
+		}
+		#endregion
+		bool inserterWasSelected = false;
+		//handle InserterRow FIXME: wont be saved if user moves focus out of editor then saves
+		//FIXME: should save with emty string / comment if name changed from default
 		void OnEntrySelected (object sender, EventArgs args)
 		{			
 			IStringResourceDisplay entry = SelectedEntry;
 			if (entry is InserterRow) {
 				inserterWasSelected = true;
-				entry.Name = "unique name here";
+				Inserter.Selected ();
 			} else if (inserterWasSelected) {
 				inserterWasSelected = false;
-				if (Inserter.Name != null && ( Inserter.Value != null || Inserter.Comment != null))
-					InsertRow ();
-				else
-					Inserter.Reset ();
+				Inserter.Deselected ();
 			}
 		}
 
-		void InsertRow ()
+		void AddEntry (StringResourceEntry newEntry)
 		{
-			//FIXME: should move some of this to catalog
-			StringResourceEntry newEntry = new StringResourceEntry (catalog, Inserter.Name, 
-			                                                    Inserter.Value, Inserter.Comment);
-			catalog.AddEntry (newEntry);
+			createdAfterSort.Add (newEntry);
+			TreePath currentPath = null;
+			TreePath [] paths = entriesTreeView.Selection.GetSelectedRows ();
+			if (paths != null)
+				currentPath = paths [0];
+			//UpdateFromCatalog ();  
+			TreeIter tempIter = SelectedIter; //FIXME: by avoiding Update From Catalog, no scroll problem
+			store.Remove (ref tempIter);
 			store.AppendValues (newEntry);
-			Inserter.Reset ();
-			UpdateFromCatalog ();
+			store.AppendValues (Inserter);
+			rowSelect = currentPath;
+			if (currentPath != null)
+				GLib.Idle.Add (ReturnToRowSelect); // causes scroll downward revealing next blank entry
 		}
 
 		void RemoveEntry (ResourceEntry entry)
@@ -274,20 +326,163 @@ namespace MonoDevelop.NETResources {
 		string filter = String.Empty;
 		Regex  regex = new Regex (String.Empty);
 		// called on load and when catalog filtered
-		void UpdateFromCatalog ()
+		public void UpdateFromCatalog ()
 		{
 			var newStore = new ListStore (typeof (IStringResourceDisplay));
+			int total = 0, found = 0;
 
 			foreach (var re in Catalog) {
-				if (re is StringResourceEntry)
-					newStore.AppendValues (re);
+				if (re is StringResourceEntry) {
+					if (options.ShouldFilter ((StringResourceEntry) re)) {
+						total++;
+					} else {
+						newStore.AppendValues (re);
+						found++;
+					}
+				}
 			}
 
+			newStore.DefaultSortFunc = nameSortFunc;
+			newStore.SetSortFunc (0, nameSortFunc);
+			newStore.SetSortFunc (1, baseValueSortFunc);
+			newStore.SetSortFunc (2, valueSortFunc);
+			newStore.SetSortFunc (3, commentSortFunc);
+
+			int sortCol;
+			SortType sortType;
+			store.GetSortColumnId (out sortCol,out sortType);
+			newStore.SetSortColumnId (sortCol, sortType);
+			newStore.SortColumnChanged += HandleSortColumnChanged;
+
+			//FIXME: 
+			if (Inserter == null)
+				Inserter = new InserterRow (catalog, AddEntry);
+			else if (Inserter.catalog != catalog)
+				throw new Exception ("catalog didnt match"); // (?reinitialise)
+
 			newStore.AppendValues (Inserter);
+			store.Dispose ();
 			entriesTreeView.Model = store = newStore;
+			// FIXME: ??
+			//IdeApp.Workbench.StatusBar.ShowMessage (string.Format (GettextCatalog.GetPluralString ("{0} string resource out of {1} match filter.", "{0} string resources out of {1} match filter.", found, total), found,total));
 		}
 
-		#region Options
+		#region sorting
+		//FIXME: store no longer refreshed / sorted after addentry so no need for createdAfterSort feature?
+		void HandleSortColumnChanged (object sender, EventArgs e)
+		{
+			createdAfterSort.Clear ();
+		}
+
+		List <StringResourceEntry> createdAfterSort = new List <StringResourceEntry> (); // FIXME: shouldnt accept InserterRow
+
+		int nameSortFunc (TreeModel model, TreeIter iter1, TreeIter iter2) 
+		{
+			IStringResourceDisplay entry1 = (IStringResourceDisplay) model.GetValue (iter1, 0);
+			IStringResourceDisplay entry2 = (IStringResourceDisplay) model.GetValue (iter2, 0);
+			int c;
+			SortType sortType;
+			((TreeSortable) model).GetSortColumnId (out c, out sortType);
+
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+				return (sortType == SortType.Ascending) ? -1 : 1;
+			else
+				return entry1.Name.CompareTo (entry2.Name);
+
+		}
+
+		int baseValueSortFunc (TreeModel model, TreeIter iter1, TreeIter iter2) 
+		{
+			IStringResourceDisplay entry1 = (IStringResourceDisplay) model.GetValue (iter1, 0);
+			IStringResourceDisplay entry2 = (IStringResourceDisplay) model.GetValue (iter2, 0);
+			int c;
+			SortType sortType;
+			((TreeSortable) model).GetSortColumnId (out c, out sortType);
+
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+				return (sortType == SortType.Ascending) ? -1 : 1;
+			else
+				return entry1.GetBaseString ().CompareTo (entry2.GetBaseString ());
+		}
+
+		int valueSortFunc (TreeModel model, TreeIter iter1, TreeIter iter2) 
+		{
+			IStringResourceDisplay entry1 = (IStringResourceDisplay) model.GetValue (iter1, 0);
+			IStringResourceDisplay entry2 = (IStringResourceDisplay) model.GetValue (iter2, 0);
+			int c;
+			SortType sortType;
+			((TreeSortable) model).GetSortColumnId (out c, out sortType);
+
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+				return (sortType == SortType.Ascending) ? -1 : 1;
+			else
+				return entry1.Value.CompareTo (entry2.Value);
+		}	
+
+		int commentSortFunc (TreeModel model, TreeIter iter1, TreeIter iter2) 
+		{
+			IStringResourceDisplay entry1 = (IStringResourceDisplay) model.GetValue (iter1, 0);
+			IStringResourceDisplay entry2 = (IStringResourceDisplay) model.GetValue (iter2, 0);
+			int c;
+			SortType sortType;
+			((TreeSortable) model).GetSortColumnId (out c, out sortType);
+
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+				return (sortType == SortType.Ascending) ? -1 : 1;
+			else
+				return entry1.Comment.CompareTo (entry2.Comment);
+		}
+
+		#endregion
+
+		void UpdateProgressBar ()
+		{
+			/*
+			int all, untrans, fuzzy, missing, bad;
+			catalog.GetStatistics (out all, out fuzzy, out missing, out bad, out untrans);
+			double percentage = all > 0 ? ((double)(all - untrans) / all) * 100 : 0.0;
+			string barText = String.Format (GettextCatalog.GetString ("{0:#00.00}% Translated"), percentage);
+			if (untrans > 0 || fuzzy > 0)
+				barText += " (";
+
+			if (untrans > 0) {
+				barText += String.Format (GettextCatalog.GetPluralString ("{0} Missing Message", "{0} Missing Messages", untrans), untrans);
+			}
+
+			if (fuzzy > 0) {
+				if (untrans > 0) {
+					barText += ", ";
+				}
+				barText += String.Format (GettextCatalog.GetPluralString ("{0} Fuzzy Message", "{0} Fuzzy Messages", fuzzy), fuzzy);
+			}
+
+			if (untrans > 0 || fuzzy > 0)
+				barText += ")";
+			
+			this.progressbar1.Text = barText;
+			percentage = percentage / 100;
+			this.progressbar1.Fraction = percentage;
+			*/
+		}
+
+    }
+	interface IStringResourceDisplay {
+		string Name {get; set;}
+		string Value {get; set;} 
+		string Comment {get; set;}
+		string GetBaseString ();
+	}
+	//FIXME: ResXEditorWidget will probably become StringEditorWidget
+	public class StringEditorOptions {
+		static bool isCaseSensitive;
+		static bool isWholeWordOnly;
+		static bool regexSearch;
+		static SearchIn searchIn;
+
+		ResXEditorWidget editor;
+		string filter = "";
+		Regex  regex = new Regex ("");
+
 		enum SearchIn {
 			Name,
 			BaseValue,
@@ -295,18 +490,21 @@ namespace MonoDevelop.NETResources {
 			Comment,
 			All
 		}
-		
-		static bool isCaseSensitive;
-		static bool isWholeWordOnly;
-		static bool regexSearch;
-		static SearchIn searchIn;
-		
-		static ResXEditorWidget ()
+
+		static StringEditorOptions ()
 		{
 			isCaseSensitive = PropertyService.Get ("NETResourcesAddin.Search.IsCaseSensitive", false);
 			isWholeWordOnly = PropertyService.Get ("NETResourcesAddin.Search.IsWholeWordOnly", false);
 			regexSearch     = PropertyService.Get ("NETResourcesAddin.Search.RegexSearch", false);
 			searchIn        = PropertyService.Get ("NETResourcesAddin.Search.SearchIn", SearchIn.All);
+		}
+
+		public StringEditorOptions (ResXEditorWidget _editor)
+		{
+			if (_editor == null)
+				throw new ArgumentNullException ("editor");
+
+			editor = _editor;
 		}
 		
 		static bool IsCaseSensitive {
@@ -348,7 +546,79 @@ namespace MonoDevelop.NETResources {
 				searchIn = value;
 			}
 		}
-		#endregion
+
+		bool IsMatch (string text)
+		{
+			if (RegexSearch)
+				return regex.IsMatch (text);
+		
+			if (!IsCaseSensitive)
+				text = text.ToUpper ();
+			int idx = text.IndexOf (filter);
+			if (idx >= 0) {
+				if (IsWholeWordOnly) {
+					return (idx == 0 || char.IsWhiteSpace (text[idx - 1])) &&
+						   (idx + filter.Length == text.Length || char.IsWhiteSpace (text[idx + 1]));
+				}
+				return true;
+			}
+			return false;
+		}
+
+		public bool ShouldFilter (StringResourceEntry entry)
+		{
+
+			if (String.IsNullOrEmpty (filter)) 
+				return false;
+
+			if (DoSearchIn == SearchIn.Name || DoSearchIn == SearchIn.All) {
+				if (IsMatch (entry.Name))
+					return false;
+			}
+			if (DoSearchIn == SearchIn.BaseValue || DoSearchIn == SearchIn.All) {
+				if (IsMatch (entry.GetBaseString ()))
+					return false;
+			}
+			if (DoSearchIn == SearchIn.Value || DoSearchIn == SearchIn.All) {
+				if (IsMatch (entry.Value))
+					return false;
+			}
+			if (DoSearchIn == SearchIn.Comment || DoSearchIn == SearchIn.All) {
+				if (IsMatch (entry.Comment))
+					return false;
+			}
+
+			return true;
+		}
+
+		internal static readonly Gdk.Color errorColor = new Gdk.Color (210, 32, 32);
+
+		void SetUpFilter ()
+		{
+			filter = editor.SearchEntry.Entry.Text;
+
+			if (!IsCaseSensitive && filter != null)
+				filter = filter.ToUpper ();
+			if (RegexSearch) {
+				try {
+					RegexOptions options = RegexOptions.Compiled;
+					if (!IsCaseSensitive)
+						options |= RegexOptions.IgnoreCase;
+					regex = new Regex (filter, options);
+				} catch (Exception e) {
+					IdeApp.Workbench.StatusBar.ShowError (e.Message);
+					editor.SearchEntry.Entry.ModifyBase (StateType.Normal, errorColor);
+					return;
+				}
+			}
+			editor.SearchEntry.Entry.ModifyBase (StateType.Normal, editor.Style.Base (StateType.Normal));
+		}
+
+		public void Refresh ()
+		{
+			SetUpFilter ();
+			editor.UpdateFromCatalog ();
+		}
 
 		// options menu for filterSearchEntry
 		public Menu CreateOptionsMenu ()
@@ -408,35 +678,35 @@ namespace MonoDevelop.NETResources {
 			all.Activated += delegate {
 				if (DoSearchIn != SearchIn.All) {
 					DoSearchIn = SearchIn.All;
-					UpdateFromCatalog ();
+					Refresh ();
 					menu.Destroy ();
 				}
 			};
 			baseValue.Activated += delegate {
 				if (DoSearchIn != SearchIn.BaseValue) {
 					DoSearchIn = SearchIn.BaseValue;
-					UpdateFromCatalog ();
+					Refresh ();
 					menu.Destroy ();
 				}
 			};
 			value.Activated += delegate {
 				if (DoSearchIn != SearchIn.Value) {
 					DoSearchIn = SearchIn.Value;
-					UpdateFromCatalog ();
+					Refresh ();
 					menu.Destroy ();
 				}
 			};
 			name.Activated += delegate {
 				if (DoSearchIn != SearchIn.Name) {
 					DoSearchIn = SearchIn.Name;
-					UpdateFromCatalog ();
+					Refresh ();
 					menu.Destroy ();
 				}
 			};
 			comment.Activated += delegate {
 				if (DoSearchIn != SearchIn.Comment) {
 					DoSearchIn = SearchIn.Comment;
-					UpdateFromCatalog ();
+					Refresh ();
 					menu.Destroy ();
 				}
 			};
@@ -445,7 +715,7 @@ namespace MonoDevelop.NETResources {
 			regexSearch.Active = RegexSearch;
 			regexSearch.ButtonPressEvent += delegate { 
 				RegexSearch = !RegexSearch;
-				UpdateFromCatalog ();
+				Refresh ();
 			};
 			menu.Append (regexSearch);
 			
@@ -453,7 +723,7 @@ namespace MonoDevelop.NETResources {
 			caseSensitive.Active = IsCaseSensitive;
 			caseSensitive.ButtonPressEvent += delegate { 
 				IsCaseSensitive = !IsCaseSensitive;
-				UpdateFromCatalog ();
+				Refresh ();
 			};
 			menu.Append (caseSensitive);
 			
@@ -462,66 +732,102 @@ namespace MonoDevelop.NETResources {
 			wholeWordsOnly.Sensitive = !RegexSearch;
 			wholeWordsOnly.ButtonPressEvent += delegate {
 				IsWholeWordOnly = !IsWholeWordOnly;
-				UpdateFromCatalog ();
+				Refresh ();
 			};
 			menu.Append (wholeWordsOnly);
 			menu.ShowAll ();
 			return menu;
 		}
-
-		void UpdateProgressBar ()
-		{
-			/*
-			int all, untrans, fuzzy, missing, bad;
-			catalog.GetStatistics (out all, out fuzzy, out missing, out bad, out untrans);
-			double percentage = all > 0 ? ((double)(all - untrans) / all) * 100 : 0.0;
-			string barText = String.Format (GettextCatalog.GetString ("{0:#00.00}% Translated"), percentage);
-			if (untrans > 0 || fuzzy > 0)
-				barText += " (";
-
-			if (untrans > 0) {
-				barText += String.Format (GettextCatalog.GetPluralString ("{0} Missing Message", "{0} Missing Messages", untrans), untrans);
-			}
-
-			if (fuzzy > 0) {
-				if (untrans > 0) {
-					barText += ", ";
-				}
-				barText += String.Format (GettextCatalog.GetPluralString ("{0} Fuzzy Message", "{0} Fuzzy Messages", fuzzy), fuzzy);
-			}
-
-			if (untrans > 0 || fuzzy > 0)
-				barText += ")";
-			
-			this.progressbar1.Text = barText;
-			percentage = percentage / 100;
-			this.progressbar1.Fraction = percentage;
-			*/
-		}
-
-    }
-	interface IStringResourceDisplay {
-		string Name {get; set;}
-		string Value {get; set;} 
-		string Comment {get; set;}
-		string GetBaseString ();
 	}
 
-	class InserterRow : IStringResourceDisplay {
+	public delegate void AddEntryFunc (StringResourceEntry newEntry);
+
+	public class InserterRow : IStringResourceDisplay {
+		string name;
+		string _value;
+		string comment;
+		public ResourceCatalog catalog;
+		bool changed;
+		AddEntryFunc addEntryFunc;
+
 		#region IStringResourceDisplay implementation
-		public string Name {get; set; }
-		public string Value  { get; set; }
-		public string Comment  { get; set;}
+		public string Name {
+			get {
+				return name;
+			} 
+			set {
+				if (name != value) {
+					name = value;
+					Changed = true;
+				}
+			}
+		}
+		public string Value  {
+			get { return _value; }
+			set {
+				if (_value != value) {
+					_value = value;
+					Changed = true;	
+				}
+			}
+		}
+		public string Comment  { 
+			get { return comment; }
+			set {
+				if (comment != value) {
+					comment = value;
+					Changed = true;	
+				}
+			}
+		}
 		#endregion
+		public bool Changed { 
+			get {
+				return changed;
+			} 
+			set {
+				changed = value;
+				if (changed)
+					CreateResource ();
+			}
+		}
+		public InserterRow (ResourceCatalog _catalog, AddEntryFunc _addEntryFunc)
+		{
+			if (_catalog == null)
+				throw new ArgumentNullException ("catalog");
+			if (_addEntryFunc == null)
+				throw new ArgumentNullException ("addEntryFunc");
+
+			catalog = _catalog;
+			addEntryFunc = _addEntryFunc;
+			Reset ();
+
+		}
 		public string GetBaseString ()
 		{
-			return null;
+			return "";
 		}
-		public void Reset ()
+		public void Selected ()
 		{
-			Name = null; 
-			Value = null; 
-			Comment = null;
+			name = catalog.NextFreeName ();
+		}
+		public void Deselected ()
+		{
+			Reset ();
+		}
+		void Reset ()
+		{
+			name = "";
+			_value = ""; 
+			comment = "";
+			Changed = false;
+		}
+		void CreateResource ()
+		{
+			StringResourceEntry newEntry = new StringResourceEntry (catalog, Name, Value, Comment);
+			catalog.AddEntry (newEntry);
+			Reset ();
+			addEntryFunc (newEntry);
 		}
 	}
 }
