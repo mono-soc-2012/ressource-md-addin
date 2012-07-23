@@ -86,7 +86,7 @@ namespace MonoDevelop.NETResources {
 		var newStore = new ListStore (typeof (string), typeof (Gdk.Pixbuf), typeof (string));
 		//var newStore = new ListStore (typeof (ResourceEntry));
 		Gdk.Pixbuf ico;
-		string tooltip;
+		string tooltip = null;
 		foreach (var re in Catalog) {
 			if (re is FileRefResourceEntry || re is ObjectResourceEntry) {
 				ico = GetIconForType (Type.GetType (re.TypeName));

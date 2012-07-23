@@ -1,16 +1,15 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResXObjectIconWidget.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResXEditorWidget.cs">
     <Files>
-      <File FileName="NETResources/ResourceEntry.cs" Line="206" Column="5" />
-      <File FileName="NETResources/ResXObjectIconWidget.cs" Line="84" Column="27" />
+      <File FileName="NETResources/ResXEditorWidget.cs" Line="237" Column="12" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="NETResources" expanded="True">
             <Node name="UserInterface" expanded="True" />
-            <Node name="ResXObjectIconWidget.cs" selected="True" />
+            <Node name="ResXEditorWidget.cs" selected="True" />
           </Node>
         </State>
       </Pad>

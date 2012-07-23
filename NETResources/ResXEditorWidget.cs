@@ -188,14 +188,17 @@ namespace MonoDevelop.NETResources {
 			column.Expand = true;
 			column.SortIndicator = true;
 			column.SortColumnId = sortColumnId;
+			column.Sizing = TreeViewColumnSizing.Fixed;
 			column.Resizable = true;
 
 			column.Title = GettextCatalog.GetString (title);
 			CellRendererText cell = new CellRendererText ();
-			cell.Ellipsize = Pango.EllipsizeMode.End;
+			//cell.Ellipsize = Pango.EllipsizeMode.End;
+			cell.WrapMode = Pango.WrapMode.Word;
+
+			column.AddNotification ("width", columnWidthChanged);
 			column.PackStart (cell, true);
 			column.SetCellDataFunc (cell, treeCellDataFunc);
-			// column.AddAttribute (cell, "text", modelPos);
 			return column;
 		}
 
@@ -207,17 +210,34 @@ namespace MonoDevelop.NETResources {
 			column.Expand = true;
 			column.SortIndicator = true;
 			column.SortColumnId = sortColumnId;
+			column.Sizing = TreeViewColumnSizing.Fixed;
 			column.Resizable = true;
 
 			column.Title = GettextCatalog.GetString (title);
 			CellRendererText cell = new CellRendererText ();
-			cell.Ellipsize = Pango.EllipsizeMode.End;
+			//cell.Ellipsize = Pango.EllipsizeMode.End;
 			cell.Editable = true;
+			cell.WrapMode = Pango.WrapMode.Word;
+
+			column.AddNotification ("width", columnWidthChanged);
 			column.PackStart (cell, true);
 
 			column.SetCellDataFunc (cell, treeCellDataFunc);
 			cell.Edited += editHandler;
 			return column;
+		}
+
+		void columnWidthChanged (object sender, GLib.NotifyArgs args)
+		{
+			//FIXME: assumes 1 cell renderer per column and its a ...Text
+			var col = (TreeViewColumn) sender;
+			var crText = (CellRendererText) col.Cells [0];
+			//FIXME: hacky
+			if ((crText.WrapWidth > col.Width -15 && crText.WrapWidth < col.Width - 5) || col.Width < 10)
+				return;
+			crText.WrapWidth = col.Width - 10;
+			entriesTreeView.Model = null; 
+			entriesTreeView.Model = store; // rows need to be regenerated to have correct heights to display wrapped lines
 		}
 
 		void ShowPopup (EventButton evt)
