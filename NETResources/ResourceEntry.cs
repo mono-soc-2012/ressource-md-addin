@@ -40,9 +40,23 @@ namespace MonoDevelop.NETResources {
 					node.Comment = value;
 					MarkOwnerDirty ();
 				}
-			} 
+			}
 		}
-
+		public string TypeName {
+			get {
+				//FIXME: loads assemblies into the MD process
+				return node.GetValueTypeName ((AssemblyName []) null);
+			}
+		}
+		/*
+		public string TypeFullName {
+			get {
+				string name = TypeName;
+				int pos = name.IndexOf (",");
+				return name.Substring (0,pos);
+			}
+		}
+		*/
 		public ResourceCatalog Owner { get; set; }
 
 		// FIXME: should this be a constructor? Note subclasses have different validation checks for node
@@ -58,10 +72,12 @@ namespace MonoDevelop.NETResources {
 
 		public virtual object GetBaseValue ()
 		{
-			// if (Parent.BaseCatalog.HasName (Name))
-			// 	return Parent.BaseCatalog[Name].Value;
-			// else
-				return null; //FIXME: not implemented
+			if (Owner.BaseCatalog == null)
+				return "No base loaded";
+			else if (Owner.BaseCatalog.ContainsName (Name))
+			 	return Owner.BaseCatalog[Name].GetValue ();
+			else
+				return "(Not present)";
 		}
 
 		protected void MarkOwnerDirty ()
@@ -72,7 +88,6 @@ namespace MonoDevelop.NETResources {
 	}
 
 	public class StringResourceEntry : ResourceEntry, IStringResourceDisplay {
-
 		public string Value {
 			get {
 				return (string) base.GetValue();
@@ -127,7 +142,7 @@ namespace MonoDevelop.NETResources {
 			if (obj is String)
 				return (string) obj;
 			else
-				return "(no base resource)";// + obj.GetType ().ToString ();
+				return String.Format ("Is a {0} type in base", obj.GetType ().ToString ());
 		}
 	}
 
@@ -181,10 +196,14 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
-		public string TypeName {
+		public Encoding TextFileEncoding {
 			get {
-				return FileRef.TypeName;
-			} 
+				return FileRef.TextFileEncoding;
+			} set {
+				node = new ResXDataNode (node.Name, new ResXFileRef (node.FileRef.FileName, 
+				                                                     node.FileRef.TypeName,
+				                                                     value));
+			}
 		}
 
 		public FileRefResourceEntry (ResourceCatalog _owner, ResXDataNode _node)

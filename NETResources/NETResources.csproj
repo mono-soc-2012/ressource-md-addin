@@ -103,6 +103,8 @@
     <Compile Include="ResXEditorView.cs" />
     <Compile Include="ResourceCatalog.cs" />
     <Compile Include="ResourceEntry.cs" />
+    <Compile Include="ResXObjectIconWidget.cs" />
+    <Compile Include="gtk-gui\MonoDevelop.NETResources.ResXObjectIconWidget.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

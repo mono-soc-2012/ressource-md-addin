@@ -8,6 +8,8 @@ using System.Resources;
 using System.Reflection;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace MonoDevelop.NETResources {
 	public class ResourceCatalog : IEnumerable<ResourceEntry> {
@@ -44,9 +46,16 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
+		public ResourceCatalog BaseCatalog { get; private set; }
+
 		public ResourceCatalog () 
 		{
 
+		}
+
+		public bool ContainsName (string name)
+		{
+			return entriesList.Any (e => e.Name == name);
 		}
 
 		public bool IsUniqueName (string oldName, string newName, bool IsNew)
@@ -86,10 +95,71 @@ namespace MonoDevelop.NETResources {
 			entriesList.Clear ();
 		}
 
+		void GetBaseCatalog ()
+		{
+
+			Regex cultureRegex = new Regex (@"(?<PreCulture>.*)\.(?<Culture>[^\.]*)\.resx$", RegexOptions.IgnoreCase);
+			Match cultureMatch = cultureRegex.Match (fileName);
+
+			if (!cultureMatch.Success) { //this is a base catalog
+				BaseCatalog = null;
+				return;
+			}
+
+			string cultureString = cultureMatch.Groups ["Culture"].Value;
+
+			if (cultureString == "aspx") { //this is a base catalog
+				BaseCatalog = null;
+				return;
+			}
+
+			try {
+				new CultureInfo (cultureString); // raises error if not valid
+				TryLoadBaseCatalog (cultureMatch.Groups ["PreCulture"].Value + ".resx");
+				return;
+			} catch {
+				//FIXME: gets here when no valid culture found, but ignores custom / not installed cultures, maybe log too?
+				BaseCatalog = null;
+				return;
+			}
+
+			/*
+			foreach (var name in  CultureInfo.GetCultures (CultureTypes.AllCultures).Select (c=> c.Name)) {
+				if (name.ToUpper () == cultureString.ToUpper ()) {
+					TryLoadBaseCatalog (cultureMatch.Groups ["PreCulture"].Value + ".resx");
+					return;
+				}
+			}
+			BaseCatalog = null;
+			return;
+			*/
+		}
+
+		void TryLoadBaseCatalog (string baseFilePath)
+		{
+			if (!File.Exists (baseFilePath)) {
+				//FIXME: log base catalog not found
+				BaseCatalog = null;
+				return;
+			}
+
+			try {
+				ResourceCatalog tempCat = new ResourceCatalog ();
+				tempCat.Load (null, baseFilePath);
+				BaseCatalog = tempCat;
+			} catch (Exception ex) {
+				//FIXME: log
+				BaseCatalog = null;
+			}
+
+		}
+
 		public bool Load (IProgressMonitor monitor, string resxFile)
 		{
 			Clear ();
 			fileName = resxFile;
+			GetBaseCatalog ();
+
 			try {
 				using (var reader = new ResXResourceReader (resxFile)) {
 					reader.UseResXDataNodes = true;

@@ -36,6 +36,7 @@ namespace MonoDevelop.NETResources {
 				catalog = value;
 				UpdateFromCatalog ();
 				UpdateProgressBar ();
+				objectIconWidget.Catalog = catalog;
 			}
 		}
 
@@ -463,6 +464,17 @@ namespace MonoDevelop.NETResources {
 			percentage = percentage / 100;
 			this.progressbar1.Fraction = percentage;
 			*/
+		}		
+
+				
+		protected void OnStringResourcesActivated (object sender, EventArgs e)
+		{
+			pagesNotebook.CurrentPage = 0;
+		}
+		protected void OnOtherResourcesActivated (object sender, EventArgs e)
+		{
+			pagesNotebook.CurrentPage = 1;
+			objectIconWidget.Catalog = catalog;
 		}
 
     }

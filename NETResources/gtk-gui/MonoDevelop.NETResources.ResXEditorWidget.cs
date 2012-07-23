@@ -7,21 +7,24 @@ namespace MonoDevelop.NETResources
 		private global::Gtk.UIManager UIManager;
 		private global::Gtk.Action StringResourcesAction;
 		private global::Gtk.Action OtherAction;
-		private global::Gtk.ToggleAction StringResourcesAction1;
-		private global::Gtk.ToggleAction OtherResourcesAction;
+		private global::Gtk.RadioAction StringResourcesAction1;
+		private global::Gtk.RadioAction OtherResourcesAction;
 		private global::Gtk.VBox vbox1;
-		private global::Gtk.Notebook notebook1;
+		private global::Gtk.Notebook pagesNotebook;
 		private global::Gtk.VBox vbox2;
 		private global::Gtk.HBox hbox1;
 		private global::Gtk.Label FilterLabel;
 		private global::MonoDevelop.Components.SearchEntry filterSearchEntry;
-		private global::Gtk.Label AccessorLabel;
-		private global::Gtk.ComboBox AccessorCombo;
 		private global::Gtk.ScrolledWindow entriesScrolledWindow;
 		private global::Gtk.TreeView entriesTreeView;
+		private global::MonoDevelop.NETResources.ResXObjectIconWidget objectIconWidget;
+		private global::Gtk.Label label4;
 		private global::Gtk.HBox hbox2;
 		private global::Gtk.Toolbar pagesToolBar;
-		private global::Gtk.ProgressBar translationProgressBar;
+		private global::Gtk.Label CreateClassLabel;
+		private global::Gtk.ComboBox StronglyTypedCombo;
+		private global::Gtk.ComboBox AccessorCombo;
+		private global::Gtk.Label AccessorLabel;
 		
 		protected virtual void Build ()
 		{
@@ -38,12 +41,14 @@ namespace MonoDevelop.NETResources
 			this.OtherAction.HideIfEmpty = false;
 			this.OtherAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Resources");
 			w2.Add (this.OtherAction, null);
-			this.StringResourcesAction1 = new global::Gtk.ToggleAction ("StringResourcesAction1", global::Mono.Unix.Catalog.GetString ("String Resources"), null, null);
+			this.StringResourcesAction1 = new global::Gtk.RadioAction ("StringResourcesAction1", global::Mono.Unix.Catalog.GetString ("String Resources"), null, null, 0);
+			this.StringResourcesAction1.Group = new global::GLib.SList (global::System.IntPtr.Zero);
 			this.StringResourcesAction1.HideIfEmpty = false;
 			this.StringResourcesAction1.IsImportant = true;
 			this.StringResourcesAction1.ShortLabel = global::Mono.Unix.Catalog.GetString ("String Resources");
 			w2.Add (this.StringResourcesAction1, null);
-			this.OtherResourcesAction = new global::Gtk.ToggleAction ("OtherResourcesAction", global::Mono.Unix.Catalog.GetString ("Other Resources"), null, null);
+			this.OtherResourcesAction = new global::Gtk.RadioAction ("OtherResourcesAction", global::Mono.Unix.Catalog.GetString ("Other Resources"), null, null, 0);
+			this.OtherResourcesAction.Group = this.StringResourcesAction1.Group;
 			this.OtherResourcesAction.HideIfEmpty = false;
 			this.OtherResourcesAction.IsImportant = true;
 			this.OtherResourcesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Resources");
@@ -55,13 +60,13 @@ namespace MonoDevelop.NETResources
 			this.vbox1.Name = "vbox1";
 			this.vbox1.Spacing = 6;
 			// Container child vbox1.Gtk.Box+BoxChild
-			this.notebook1 = new global::Gtk.Notebook ();
-			this.notebook1.CanFocus = true;
-			this.notebook1.Name = "notebook1";
-			this.notebook1.CurrentPage = 0;
-			this.notebook1.ShowBorder = false;
-			this.notebook1.ShowTabs = false;
-			// Container child notebook1.Gtk.Notebook+NotebookChild
+			this.pagesNotebook = new global::Gtk.Notebook ();
+			this.pagesNotebook.CanFocus = true;
+			this.pagesNotebook.Name = "pagesNotebook";
+			this.pagesNotebook.CurrentPage = 1;
+			this.pagesNotebook.ShowBorder = false;
+			this.pagesNotebook.ShowTabs = false;
+			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
 			this.vbox2 = new global::Gtk.VBox ();
 			this.vbox2.Name = "vbox2";
 			this.vbox2.Spacing = 6;
@@ -89,31 +94,11 @@ namespace MonoDevelop.NETResources
 			this.hbox1.Add (this.filterSearchEntry);
 			global::Gtk.Box.BoxChild w4 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.filterSearchEntry]));
 			w4.Position = 1;
-			// Container child hbox1.Gtk.Box+BoxChild
-			this.AccessorLabel = new global::Gtk.Label ();
-			this.AccessorLabel.Name = "AccessorLabel";
-			this.AccessorLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Accessor");
-			this.hbox1.Add (this.AccessorLabel);
-			global::Gtk.Box.BoxChild w5 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.AccessorLabel]));
-			w5.Position = 2;
+			this.vbox2.Add (this.hbox1);
+			global::Gtk.Box.BoxChild w5 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox1]));
+			w5.Position = 0;
 			w5.Expand = false;
 			w5.Fill = false;
-			// Container child hbox1.Gtk.Box+BoxChild
-			this.AccessorCombo = global::Gtk.ComboBox.NewText ();
-			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No Generation"));
-			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Internal"));
-			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Public"));
-			this.AccessorCombo.Name = "AccessorCombo";
-			this.hbox1.Add (this.AccessorCombo);
-			global::Gtk.Box.BoxChild w6 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.AccessorCombo]));
-			w6.Position = 3;
-			w6.Expand = false;
-			w6.Fill = false;
-			this.vbox2.Add (this.hbox1);
-			global::Gtk.Box.BoxChild w7 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox1]));
-			w7.Position = 0;
-			w7.Expand = false;
-			w7.Fill = false;
 			// Container child vbox2.Gtk.Box+BoxChild
 			this.entriesScrolledWindow = new global::Gtk.ScrolledWindow ();
 			this.entriesScrolledWindow.CanFocus = true;
@@ -125,9 +110,26 @@ namespace MonoDevelop.NETResources
 			this.entriesTreeView.Name = "entriesTreeView";
 			this.entriesScrolledWindow.Add (this.entriesTreeView);
 			this.vbox2.Add (this.entriesScrolledWindow);
-			global::Gtk.Box.BoxChild w9 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
+			global::Gtk.Box.BoxChild w7 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
+			w7.Position = 1;
+			this.pagesNotebook.Add (this.vbox2);
+			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
+			this.objectIconWidget = new global::MonoDevelop.NETResources.ResXObjectIconWidget ();
+			this.objectIconWidget.Events = ((global::Gdk.EventMask)(256));
+			this.objectIconWidget.Name = "objectIconWidget";
+			this.pagesNotebook.Add (this.objectIconWidget);
+			global::Gtk.Notebook.NotebookChild w9 = ((global::Gtk.Notebook.NotebookChild)(this.pagesNotebook [this.objectIconWidget]));
 			w9.Position = 1;
-			// Container child vbox2.Gtk.Box+BoxChild
+			// Notebook tab
+			this.label4 = new global::Gtk.Label ();
+			this.label4.Name = "label4";
+			this.label4.LabelProp = global::Mono.Unix.Catalog.GetString ("page3");
+			this.pagesNotebook.SetTabLabel (this.objectIconWidget, this.label4);
+			this.label4.ShowAll ();
+			this.vbox1.Add (this.pagesNotebook);
+			global::Gtk.Box.BoxChild w10 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.pagesNotebook]));
+			w10.Position = 0;
+			// Container child vbox1.Gtk.Box+BoxChild
 			this.hbox2 = new global::Gtk.HBox ();
 			this.hbox2.Name = "hbox2";
 			this.hbox2.Spacing = 6;
@@ -137,29 +139,62 @@ namespace MonoDevelop.NETResources
 			this.pagesToolBar.Name = "pagesToolBar";
 			this.pagesToolBar.ShowArrow = false;
 			this.hbox2.Add (this.pagesToolBar);
-			global::Gtk.Box.BoxChild w10 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.pagesToolBar]));
-			w10.Position = 0;
+			global::Gtk.Box.BoxChild w11 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.pagesToolBar]));
+			w11.Position = 0;
 			// Container child hbox2.Gtk.Box+BoxChild
-			this.translationProgressBar = new global::Gtk.ProgressBar ();
-			this.translationProgressBar.Name = "translationProgressBar";
-			this.hbox2.Add (this.translationProgressBar);
-			global::Gtk.Box.BoxChild w11 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.translationProgressBar]));
-			w11.Position = 1;
-			this.vbox2.Add (this.hbox2);
-			global::Gtk.Box.BoxChild w12 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox2]));
-			w12.Position = 2;
+			this.CreateClassLabel = new global::Gtk.Label ();
+			this.CreateClassLabel.Name = "CreateClassLabel";
+			this.CreateClassLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Create Class");
+			this.hbox2.Add (this.CreateClassLabel);
+			global::Gtk.Box.BoxChild w12 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.CreateClassLabel]));
+			w12.Position = 1;
 			w12.Expand = false;
 			w12.Fill = false;
-			this.notebook1.Add (this.vbox2);
-			this.vbox1.Add (this.notebook1);
-			global::Gtk.Box.BoxChild w14 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.notebook1]));
-			w14.Position = 0;
+			// Container child hbox2.Gtk.Box+BoxChild
+			this.StronglyTypedCombo = global::Gtk.ComboBox.NewText ();
+			this.StronglyTypedCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Yes"));
+			this.StronglyTypedCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No"));
+			this.StronglyTypedCombo.Name = "StronglyTypedCombo";
+			this.hbox2.Add (this.StronglyTypedCombo);
+			global::Gtk.Box.BoxChild w13 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.StronglyTypedCombo]));
+			w13.Position = 2;
+			w13.Expand = false;
+			w13.Fill = false;
+			// Container child hbox2.Gtk.Box+BoxChild
+			this.AccessorCombo = global::Gtk.ComboBox.NewText ();
+			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No Generation"));
+			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Internal"));
+			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Public"));
+			this.AccessorCombo.Name = "AccessorCombo";
+			this.hbox2.Add (this.AccessorCombo);
+			global::Gtk.Box.BoxChild w14 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.AccessorCombo]));
+			w14.PackType = ((global::Gtk.PackType)(1));
+			w14.Position = 3;
+			w14.Expand = false;
+			w14.Fill = false;
+			// Container child hbox2.Gtk.Box+BoxChild
+			this.AccessorLabel = new global::Gtk.Label ();
+			this.AccessorLabel.Name = "AccessorLabel";
+			this.AccessorLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Accessor");
+			this.hbox2.Add (this.AccessorLabel);
+			global::Gtk.Box.BoxChild w15 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.AccessorLabel]));
+			w15.PackType = ((global::Gtk.PackType)(1));
+			w15.Position = 4;
+			w15.Expand = false;
+			w15.Fill = false;
+			this.vbox1.Add (this.hbox2);
+			global::Gtk.Box.BoxChild w16 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.hbox2]));
+			w16.Position = 1;
+			w16.Expand = false;
+			w16.Fill = false;
 			this.Add (this.vbox1);
 			if ((this.Child != null)) {
 				this.Child.ShowAll ();
 			}
 			w1.SetUiManager (UIManager);
 			this.Show ();
+			this.StringResourcesAction1.Activated += new global::System.EventHandler (this.OnStringResourcesActivated);
+			this.OtherResourcesAction.Activated += new global::System.EventHandler (this.OnOtherResourcesActivated);
 		}
 	}
 }
