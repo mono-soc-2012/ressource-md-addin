@@ -4,7 +4,7 @@ namespace MonoDevelop.NETResources
 {
 	public partial class ResXObjectIconWidget
 	{
-		private global::Gtk.IconView iconview2;
+		private global::Gtk.IconView entriesIV;
 		
 		protected virtual void Build ()
 		{
@@ -13,11 +13,11 @@ namespace MonoDevelop.NETResources
 			global::Stetic.BinContainer.Attach (this);
 			this.Name = "MonoDevelop.NETResources.ResXObjectIconWidget";
 			// Container child MonoDevelop.NETResources.ResXObjectIconWidget.Gtk.Container+ContainerChild
-			this.iconview2 = new global::Gtk.IconView ();
-			this.iconview2.CanFocus = true;
-			this.iconview2.Name = "iconview2";
-			this.iconview2.ItemWidth = 150;
-			this.Add (this.iconview2);
+			this.entriesIV = new global::Gtk.IconView ();
+			this.entriesIV.CanFocus = true;
+			this.entriesIV.Name = "entriesIV";
+			this.entriesIV.ItemWidth = 150;
+			this.Add (this.entriesIV);
 			if ((this.Child != null)) {
 				this.Child.ShowAll ();
 			}

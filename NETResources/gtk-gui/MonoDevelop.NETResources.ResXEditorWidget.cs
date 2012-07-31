@@ -16,7 +16,7 @@ namespace MonoDevelop.NETResources
 		private global::Gtk.Label FilterLabel;
 		private global::MonoDevelop.Components.SearchEntry filterSearchEntry;
 		private global::Gtk.ScrolledWindow entriesScrolledWindow;
-		private global::Gtk.TreeView entriesTreeView;
+		private global::Gtk.TreeView entriesTV;
 		private global::MonoDevelop.NETResources.ResXObjectIconWidget objectIconWidget;
 		private global::Gtk.Label label4;
 		private global::Gtk.HBox hbox2;
@@ -63,7 +63,7 @@ namespace MonoDevelop.NETResources
 			this.pagesNotebook = new global::Gtk.Notebook ();
 			this.pagesNotebook.CanFocus = true;
 			this.pagesNotebook.Name = "pagesNotebook";
-			this.pagesNotebook.CurrentPage = 1;
+			this.pagesNotebook.CurrentPage = 0;
 			this.pagesNotebook.ShowBorder = false;
 			this.pagesNotebook.ShowTabs = false;
 			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
@@ -105,10 +105,10 @@ namespace MonoDevelop.NETResources
 			this.entriesScrolledWindow.Name = "entriesScrolledWindow";
 			this.entriesScrolledWindow.ShadowType = ((global::Gtk.ShadowType)(1));
 			// Container child entriesScrolledWindow.Gtk.Container+ContainerChild
-			this.entriesTreeView = new global::Gtk.TreeView ();
-			this.entriesTreeView.CanFocus = true;
-			this.entriesTreeView.Name = "entriesTreeView";
-			this.entriesScrolledWindow.Add (this.entriesTreeView);
+			this.entriesTV = new global::Gtk.TreeView ();
+			this.entriesTV.CanFocus = true;
+			this.entriesTV.Name = "entriesTV";
+			this.entriesScrolledWindow.Add (this.entriesTV);
 			this.vbox2.Add (this.entriesScrolledWindow);
 			global::Gtk.Box.BoxChild w7 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
 			w7.Position = 1;

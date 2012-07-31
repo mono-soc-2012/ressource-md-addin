@@ -3,16 +3,19 @@ using System.Resources;
 using System.Reflection;
 using System.Text;
 using System.Drawing;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 
 namespace MonoDevelop.NETResources {
 	public abstract class ResourceEntry {
 		protected ResXDataNode node;
 
-		public ResXDataNode Node {
+		internal ResXDataNode Node {
 			get {	return node;	}
 		}
 		// to preserve order in resx
-		public Point RelativePos;
+		internal Point RelativePos;
 
 		public string Name { 
 			get {
@@ -57,7 +60,7 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 		*/
-		public ResourceCatalog Owner { get; set; }
+		internal ResourceCatalog Owner { get; set; }
 
 		// FIXME: should this be a constructor? Note subclasses have different validation checks for node
 		protected void SetRelativePos ()
@@ -195,7 +198,7 @@ namespace MonoDevelop.NETResources {
 				return FileRef.FileName;
 			}
 		}
-
+		[System.ComponentModel.TypeConverter (typeof (EncodingConverter))]
 		public Encoding TextFileEncoding {
 			get {
 				return FileRef.TextFileEncoding;
@@ -258,6 +261,96 @@ namespace MonoDevelop.NETResources {
 			SetRelativePos ();
 		}
 	}
+	//FIXME: inefficient - awful lot of encoding instantiations
+	[MonoDevelop.Components.PropertyGrid.PropertyEditors.StandardValuesSeparator ("--")]
+	class EncodingConverter : TypeConverter
+	{
+		public override bool GetStandardValuesSupported (ITypeDescriptorContext context)
+		{
+			return true;
+		}
+
+		public override StandardValuesCollection GetStandardValues (ITypeDescriptorContext context)
+		{
+			List <Encoding> list = new List<Encoding> () { null };
+			list.AddRange (Encoding.GetEncodings ().Select (ei => ei.GetEncoding ()).OrderBy (e=> e.EncodingName).ToList ());
+
+			return new StandardValuesCollection (list);
+		}
+
+		public override bool CanConvertTo (System.ComponentModel.ITypeDescriptorContext context, System.Type destinationType)
+		{
+			return destinationType == typeof (string);
+		}
+
+		public override object ConvertTo (System.ComponentModel.ITypeDescriptorContext context, System.Globalization.CultureInfo culture, 
+		                                  object value, System.Type destinationType)
+		{
+			if (!(value is Encoding))
+				base.ConvertTo (context, culture, value, destinationType);
+
+			if (destinationType != typeof (string))
+				base.ConvertTo (context, culture, value, destinationType);
+
+			if (value == null)
+				return "";
+
+			return ((Encoding) value).EncodingName;
+		}
+		
+		public override bool CanConvertFrom (ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof (string);
+		}
+
+		public override object ConvertFrom (ITypeDescriptorContext context,
+		                                    System.Globalization.CultureInfo culture, object value)
+		{
+			if (!IsValid (context, value))
+				throw new FormatException ("Invalid encoding");
+
+			if (value == null)
+				return null;
+
+			if ((string) value == String.Empty)
+				return null;
+
+			return GetEncodingFromName ((string) value);
+		}
+		
+		public override bool IsValid (ITypeDescriptorContext context, object value)
+		{
+			if (value == null)
+				return true;
+
+			if (!(value is String))
+				return false;
+
+			if ((string) value == String.Empty)
+				return true;
+
+			foreach (EncodingInfo ei in Encoding.GetEncodings() ) {
+				if ((string) value == ei.GetEncoding ().EncodingName) //ei.DisplayName not the same
+					return true;
+			}
+			return false;
+		}
+
+		Encoding GetEncodingFromName (string name)
+		{
+			foreach (EncodingInfo ei in Encoding.GetEncodings() ) {
+				if (name == ei.GetEncoding ().EncodingName) //ei.DisplayName not the same
+					return ei.GetEncoding ();
+			}
+			throw new FormatException ("shouldnt see me");
+		}
+
+		public override bool GetStandardValuesExclusive (ITypeDescriptorContext context)
+		{
+			return true;
+		}
+	}
+
 }
 
 		

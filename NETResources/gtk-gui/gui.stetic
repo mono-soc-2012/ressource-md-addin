@@ -6,14 +6,12 @@
   </configuration>
   <import>
     <widget-library name="Mono.TextEditor, Version=1.0.0.0, Culture=neutral" />
-    <widget-library name="MonoDevelop.Autotools, Version=2.6.0.0, Culture=neutral" />
-    <widget-library name="MonoDevelop.Deployment, Version=2.6.0.0, Culture=neutral" />
-    <widget-library name="MonoDevelop.DesignerSupport, Version=2.6.0.0, Culture=neutral" />
     <widget-library name="MonoDevelop.Ide, Version=2.6.0.0, Culture=neutral" />
-    <widget-library name="../bin/Debug/NETResources.dll" internal="true" />
     <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.GtkCore/libstetic.dll" />
+    <widget-library name="../bin/Debug/NETResources.dll" internal="true" />
+    <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.DesignerSupport/MonoDevelop.DesignerSupport.dll" />
   </import>
-  <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXEditorWidget" design-size="847 610">
+  <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXEditorWidget" design-size="743 610">
     <action-group name="Default">
       <action id="StringResourcesAction">
         <property name="Type">Action</property>
@@ -61,7 +59,7 @@
           <widget class="Gtk.Notebook" id="pagesNotebook">
             <property name="MemberName" />
             <property name="CanFocus">True</property>
-            <property name="CurrentPage">1</property>
+            <property name="CurrentPage">0</property>
             <property name="ShowBorder">False</property>
             <property name="ShowTabs">False</property>
             <child>
@@ -112,7 +110,7 @@
                     <property name="CanFocus">True</property>
                     <property name="ShadowType">In</property>
                     <child>
-                      <widget class="Gtk.TreeView" id="entriesTreeView">
+                      <widget class="Gtk.TreeView" id="entriesTV">
                         <property name="MemberName" />
                         <property name="CanFocus">True</property>
                       </widget>
@@ -240,7 +238,7 @@ Public</property>
     <property name="MemberName" />
     <property name="Visible">False</property>
     <child>
-      <widget class="Gtk.IconView" id="iconview2">
+      <widget class="Gtk.IconView" id="entriesIV">
         <property name="MemberName" />
         <property name="CanFocus">True</property>
         <property name="ItemWidth">150</property>

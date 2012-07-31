@@ -5,9 +5,10 @@ using Gdk;
 using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui;
 using MonoDevelop.Ide.Gui.Content;
+using MonoDevelop.DesignerSupport;
 
 namespace MonoDevelop.NETResources {
-	internal class ResXEditorView : AbstractViewContent { //, IUndoHandler
+	internal class ResXEditorView : AbstractViewContent, IPropertyPadProvider { //, IUndoHandler
 		public ResXEditorView ()
 		{
 		}
@@ -50,6 +51,30 @@ namespace MonoDevelop.NETResources {
 		{
 			Save (this.ContentName);
 		}
+
+		#region IPropertyPadProvider implementation
+
+		public object GetActiveComponent ()
+		{
+			return resXEditorWidget.GetObjectForPropPad ();
+		}
+
+		public object GetProvider ()
+		{
+			return GetActiveComponent ();
+		}
+
+		public void OnEndEditing (object obj)
+		{
+		}
+
+		public void OnChanged (object obj)
+		{
+			resXEditorWidget.OnPropertyPadChanged ();
+		}
+
+		#endregion
+
 		/*
 		#region IUndoHandler implementation
 		void IUndoHandler.Undo ()

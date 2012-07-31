@@ -43,7 +43,7 @@ namespace MonoDevelop.NETResources {
 		TreeIter SelectedIter {
 			get {
 				TreeIter iter;
-				if (entriesTreeView.Selection.GetSelected (out iter)) 
+				if (entriesTV.Selection.GetSelected (out iter)) 
 					return iter;
 				return Gtk.TreeIter.Zero;
 			}
@@ -54,7 +54,7 @@ namespace MonoDevelop.NETResources {
 				TreeIter iter = SelectedIter;
 				if (iter.Equals (Gtk.TreeIter.Zero))
 					return null;
-				if (entriesTreeView.Selection.IterIsSelected (iter))
+				if (entriesTV.Selection.IterIsSelected (iter))
 					return store.GetValue (iter, 0) as IStringResourceDisplay;
 				return null;
 			}
@@ -100,24 +100,24 @@ namespace MonoDevelop.NETResources {
 
 		void SetupEntriesTreeView ()
 		{
-			entriesScrolledWindow.Remove (entriesTreeView);
-			entriesTreeView.Destroy ();
-			entriesTreeView = new MonoDevelop.Components.ContextMenuTreeView ();
-			entriesTreeView.ShowAll ();
-			entriesScrolledWindow.Add (entriesTreeView);
-			((MonoDevelop.Components.ContextMenuTreeView) entriesTreeView).DoPopupMenu = ShowPopup;
+			entriesScrolledWindow.Remove (entriesTV);
+			entriesTV.Destroy ();
+			entriesTV = new MonoDevelop.Components.ContextMenuTreeView ();
+			entriesTV.ShowAll ();
+			entriesScrolledWindow.Add (entriesTV);
+			((MonoDevelop.Components.ContextMenuTreeView) entriesTV).DoPopupMenu = ShowPopup;
 
 			store = new ListStore (typeof (IStringResourceDisplay));
 
-			entriesTreeView.Model = store;
+			entriesTV.Model = store;
 			// setup columns
 
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Name", 0, nameDataFunc, nameEditedHandler));
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("BaseValue", 1, baseValueDataFunc));
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Value", 2, valueDataFunc, valueEditedHandler));
-			entriesTreeView.AppendColumn (GetEntriesTreeViewColumn ("Comment", 3, commentDataFunc, commentEditedHandler));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Name", 0, nameDataFunc, nameEditedHandler));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("BaseValue", 1, baseValueDataFunc));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Value", 2, valueDataFunc, valueEditedHandler));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Comment", 3, commentDataFunc, commentEditedHandler));
 
-			entriesTreeView.Selection.Changed += OnEntrySelected;
+			entriesTV.Selection.Changed += OnEntrySelected;
 
 			store.SetSortColumnId (0, SortType.Ascending);
 		}
@@ -236,8 +236,8 @@ namespace MonoDevelop.NETResources {
 			if ((crText.WrapWidth > col.Width -15 && crText.WrapWidth < col.Width - 5) || col.Width < 10)
 				return;
 			crText.WrapWidth = col.Width - 10;
-			entriesTreeView.Model = null; 
-			entriesTreeView.Model = store; // rows need to be regenerated to have correct heights to display wrapped lines
+			entriesTV.Model = null; 
+			entriesTV.Model = store; // rows need to be regenerated to have correct heights to display wrapped lines
 		}
 
 		void ShowPopup (EventButton evt)
@@ -287,8 +287,8 @@ namespace MonoDevelop.NETResources {
 
 		bool KeepFocusOnInvalidName ()
 		{
-			entriesTreeView.SetCursor (lastinvalidPath, entriesTreeView.Columns[0], true);
-			entriesTreeView.Selection.SelectPath (lastinvalidPath);
+			entriesTV.SetCursor (lastinvalidPath, entriesTV.Columns[0], true);
+			entriesTV.Selection.SelectPath (lastinvalidPath);
 			return false;
 		}
 
@@ -297,8 +297,8 @@ namespace MonoDevelop.NETResources {
 		bool ReturnToRowSelect ()
 		{
 
-			entriesTreeView.Selection.SelectPath (rowSelect);
-			entriesTreeView.ScrollToCell (rowSelect, entriesTreeView.Columns [0], true, 0, 0) ;
+			entriesTV.Selection.SelectPath (rowSelect);
+			entriesTV.ScrollToCell (rowSelect, entriesTV.Columns [0], true, 0, 0) ;
 			return false;
 		}
 		#endregion
@@ -321,7 +321,7 @@ namespace MonoDevelop.NETResources {
 		{
 			createdAfterSort.Add (newEntry);
 			TreePath currentPath = null;
-			TreePath [] paths = entriesTreeView.Selection.GetSelectedRows ();
+			TreePath [] paths = entriesTV.Selection.GetSelectedRows ();
 			if (paths != null)
 				currentPath = paths [0];
 			//UpdateFromCatalog ();  
@@ -383,7 +383,7 @@ namespace MonoDevelop.NETResources {
 
 			newStore.AppendValues (Inserter);
 			store.Dispose ();
-			entriesTreeView.Model = store = newStore;
+			entriesTV.Model = store = newStore;
 			// FIXME: ??
 			//IdeApp.Workbench.StatusBar.ShowMessage (string.Format (GettextCatalog.GetPluralString ("{0} string resource out of {1} match filter.", "{0} string resources out of {1} match filter.", found, total), found,total));
 		}
@@ -495,6 +495,34 @@ namespace MonoDevelop.NETResources {
 		{
 			pagesNotebook.CurrentPage = 1;
 			objectIconWidget.Catalog = catalog;
+		}
+
+		internal object GetObjectForPropPad ()
+		{
+			switch (pagesNotebook.CurrentPage) {
+			case 0:
+				return SelectedEntry;
+				break;
+			case 1:
+				return objectIconWidget.GetObjectForPropPad ();
+				break;
+			default:
+				return null; // property pad may call before editor finished loading
+			}
+		}
+
+		internal void OnPropertyPadChanged ()
+		{
+			Catalog.IsDirty = true;
+			switch (pagesNotebook.CurrentPage) {
+			case 0:
+				TreePath treePath = store.GetPath (SelectedIter);
+				store.EmitRowChanged (treePath, SelectedIter);
+				break;
+			case 1:
+				objectIconWidget.RefreshSelected ();
+				break;
+			}
 		}
 
     }
