@@ -6,6 +6,8 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide.Gui;
 using MonoDevelop.Ide.Gui.Content;
 using MonoDevelop.DesignerSupport;
+using MonoDevelop.Ide;
+using MonoDevelop.Components;
 
 namespace MonoDevelop.NETResources {
 	internal class ResXEditorView : AbstractViewContent, IPropertyPadProvider { //, IUndoHandler
@@ -27,9 +29,7 @@ namespace MonoDevelop.NETResources {
 		
 		public override void Load (string fileName)
 		{
-
 			catalog.Load (null, fileName);
-
 			resXEditorWidget.Catalog = catalog;
 
 			//poEditorWidget.POFileName = fileName;
@@ -74,6 +74,22 @@ namespace MonoDevelop.NETResources {
 		}
 
 		#endregion
+		//FIXME: very hacky solution to keeping pad up to date!!!!!!
+		static internal void SetPropertyPad (object obj)
+		{
+			try {
+			var pad = IdeApp.Workbench.GetPad <MonoDevelop.DesignerSupport.PropertyPad> ();
+			var propPad = (MonoDevelop.DesignerSupport.PropertyPad) pad.Content;
+			var en = ((InvisibleFrame) propPad.Control).AllChildren.GetEnumerator ();
+			en.MoveNext ();
+			var grid = (MonoDevelop.Components.PropertyGrid.PropertyGrid) en.Current;
+			grid.CurrentObject = obj;
+			} catch (Exception ex) {
+				LoggingService.LogError (GettextCatalog.GetString ("Error occurred in hack to update property pad {0}"), ex);
+				//FIXME: for debugging
+				throw ex;
+			}
+		}
 
 		/*
 		#region IUndoHandler implementation
@@ -107,7 +123,7 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 		#endregion
-*/
+		*/
 		public override Widget Control
 		{
 			get { return resXEditorWidget; }

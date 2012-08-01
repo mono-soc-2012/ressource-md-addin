@@ -315,6 +315,8 @@ namespace MonoDevelop.NETResources {
 				inserterWasSelected = false;
 				Inserter.Deselected ();
 			}
+
+			ResXEditorView.SetPropertyPad (SelectedEntry);
 		}
 
 		void AddEntry (StringResourceEntry newEntry)
@@ -495,6 +497,11 @@ namespace MonoDevelop.NETResources {
 		{
 			pagesNotebook.CurrentPage = 1;
 			objectIconWidget.Catalog = catalog;
+
+			MonoDevelop.Components.PropertyGrid.PropertyGrid grid = new MonoDevelop.Components.PropertyGrid.PropertyGrid ();
+
+			grid.Refresh();
+
 		}
 
 		internal object GetObjectForPropPad ()
@@ -513,9 +520,9 @@ namespace MonoDevelop.NETResources {
 
 		internal void OnPropertyPadChanged ()
 		{
-			Catalog.IsDirty = true;
 			switch (pagesNotebook.CurrentPage) {
 			case 0:
+				// careful, sometimes property pad doesnt update with treeview selected item
 				TreePath treePath = store.GetPath (SelectedIter);
 				store.EmitRowChanged (treePath, SelectedIter);
 				break;

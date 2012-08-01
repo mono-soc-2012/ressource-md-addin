@@ -6,6 +6,9 @@ using System.Drawing;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using MonoDevelop.Components.PropertyGrid;
+using System.ComponentModel.Design;
+using System.Collections;
 
 namespace MonoDevelop.NETResources {
 	public abstract class ResourceEntry {
@@ -185,27 +188,138 @@ namespace MonoDevelop.NETResources {
 		}
 	}
 
-	public class FileRefResourceEntry : ResourceEntry {
+	public class FileRefResourceEntry : ResourceEntry, ICustomTypeDescriptor {
 
 		ResXFileRef FileRef {
 			get {
 				return node.FileRef;
 			}
 		}
-
 		public string FileName {
 			get {
 				return FileRef.FileName;
 			}
 		}
+
+		bool ShowEncoding {
+			get {	return FileType == "Text"; }
+		}
+		bool ShowFileType {
+			get {	return FileType == "Text" || FileType == "Binary"; }
+		}
+
+		#region ICustomTypeDescriptor implementation
+		public AttributeCollection GetAttributes ()
+		{
+			return TypeDescriptor.GetAttributes (this, true);
+		}
+		public string GetClassName ()
+		{
+			return TypeDescriptor.GetClassName (this, true);
+		}
+		public string GetComponentName ()
+		{
+			return TypeDescriptor.GetComponentName (this, true);
+		}
+		public TypeConverter GetConverter ()
+		{
+			return TypeDescriptor.GetConverter (this, true);
+		}
+		public EventDescriptor GetDefaultEvent ()
+		{
+			return TypeDescriptor.GetDefaultEvent (this, true);
+		}
+		public PropertyDescriptor GetDefaultProperty ()
+		{
+			return TypeDescriptor.GetDefaultProperty (this, true);
+		}
+		public object GetEditor (Type editorBaseType)
+		{
+			return TypeDescriptor.GetEditor (this, editorBaseType, true);
+		}
+		public EventDescriptorCollection GetEvents ()
+		{
+			return TypeDescriptor.GetEvents (this, true);
+		}
+		public EventDescriptorCollection GetEvents (Attribute[] arr)
+		{
+			return TypeDescriptor.GetEvents (this, arr, true);
+		}
+		public PropertyDescriptorCollection GetProperties ()
+		{
+			return GetProperties (null);
+		}
+		public PropertyDescriptorCollection GetProperties (Attribute [] arr)
+		{
+			var props = TypeDescriptor.GetProperties (this, arr, true);
+			var propsToUse = new PropertyDescriptorCollection (new PropertyDescriptor [0]);
+			foreach (PropertyDescriptor prop in props) {
+				switch (prop.Name) {
+				case "TextFileEncoding":
+					if (ShowEncoding)
+						propsToUse.Add (prop);
+					break;
+				case "FileType":
+					if (ShowFileType)
+						propsToUse.Add (prop);
+					break;
+				default:
+					propsToUse.Add (prop);
+					break;
+				}
+			}
+			return propsToUse;
+		}
+		public object GetPropertyOwner (PropertyDescriptor pd)
+		{
+			return this;
+		}
+		#endregion
 		[System.ComponentModel.TypeConverter (typeof (EncodingConverter))]
 		public Encoding TextFileEncoding {
 			get {
 				return FileRef.TextFileEncoding;
 			} set {
-				node = new ResXDataNode (node.Name, new ResXFileRef (node.FileRef.FileName, 
-				                                                     node.FileRef.TypeName,
-				                                                     value));
+				var newNode = new ResXDataNode (node.Name, new ResXFileRef (node.FileRef.FileName, 
+					                                                     node.FileRef.TypeName,
+					                                                     value));
+				newNode.Comment = node.Comment;
+				node = newNode;
+				MarkOwnerDirty ();
+			}
+		}
+		[System.ComponentModel.TypeConverter (typeof (FileTypeConverter))]
+		public string FileType {
+			get { 
+				// try to avoid loading assemblies
+				if (TypeName.StartsWith ("System.String, mscorlib"))
+					return "Text";
+				else if (TypeName.StartsWith ("System.Byte[], mscorlib"))
+					return "Binary";
+				else
+					return "n/a";
+			}
+			set {
+				if (FileType == "n/a" || value == FileType)
+					return;
+				string newType;
+				if (value == "Text")
+					newType = typeof (string).AssemblyQualifiedName;
+				else if (value == "Binary")
+					newType = typeof (byte []).AssemblyQualifiedName;
+				else
+					throw new ArgumentException ("FileType", "Should be Text, Binary or n/a");
+
+				ResXFileRef fileRef;
+				if (FileRef.TextFileEncoding == null) 
+					fileRef = new ResXFileRef (FileRef.FileName, newType);
+				else
+					fileRef = new ResXFileRef (FileRef.FileName, newType, FileRef.TextFileEncoding);
+				
+				var newNode = new ResXDataNode (node.Name, fileRef);
+				newNode.Comment = node.Comment;
+				node = newNode;
+				MarkOwnerDirty ();
 			}
 		}
 
@@ -351,6 +465,77 @@ namespace MonoDevelop.NETResources {
 		}
 	}
 
+	[MonoDevelop.Components.PropertyGrid.PropertyEditors.StandardValuesSeparator ("--")]
+	class FileTypeConverter : TypeConverter
+	{
+		public override bool GetStandardValuesSupported (ITypeDescriptorContext context)
+		{
+			return true;
+		}
+		
+		public override StandardValuesCollection GetStandardValues (ITypeDescriptorContext context)
+		{
+			var entry = (FileRefResourceEntry) context.Instance;
+			if (entry.FileType == "Text" || entry.FileType == "Binary")
+				return new StandardValuesCollection (new List <string> { "Text", "Binary" });
+			else
+				return new StandardValuesCollection (new List <string> ());
+		}
+
+		public override bool CanConvertTo (System.ComponentModel.ITypeDescriptorContext context, System.Type destinationType)
+		{
+			return destinationType == typeof (string);
+		}
+		
+		public override object ConvertTo (System.ComponentModel.ITypeDescriptorContext context, System.Globalization.CultureInfo culture, 
+		                                  object value, System.Type destinationType)
+		{
+			if (!(value is string))
+				base.ConvertTo (context, culture, value, destinationType);
+			
+			if (destinationType != typeof (string))
+				base.ConvertTo (context, culture, value, destinationType);
+			
+			if (value == null)
+				return null;
+			
+			return value;
+		}
+		
+		public override bool CanConvertFrom (ITypeDescriptorContext context, Type sourceType)
+		{
+			return sourceType == typeof (string);
+		}
+		
+		public override object ConvertFrom (ITypeDescriptorContext context,
+		                                    System.Globalization.CultureInfo culture, object value)
+		{
+			if (!IsValid (context, value))
+				throw new FormatException ("Invalid");
+
+			return value;
+		}
+		
+		public override bool IsValid (ITypeDescriptorContext context, object value)
+		{
+			string str = value as String;
+
+			if (str == null)
+				return false;		
+
+			if (str != "Text" && str != "Binary" && str != "n/a")
+				return false;
+			else
+				return true;
+		}
+
+		public override bool GetStandardValuesExclusive (ITypeDescriptorContext context)
+		{
+			return true;
+		}
+	}
 }
+
+
 
 		

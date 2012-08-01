@@ -3,6 +3,8 @@ using Gtk;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using MonoDevelop.Ide;
+using MonoDevelop.Components;
 
 namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
@@ -72,6 +74,11 @@ namespace MonoDevelop.NETResources {
 			entriesIV.SetCellDataFunc (pixBuf, pixbufDataFunc);
 			entriesIV.HasTooltip = true;
 			entriesIV.QueryTooltip += tooltipHandler;
+			entriesIV.SelectionChanged += OnEntrySelected;
+		}
+		void OnEntrySelected (object sender, EventArgs args)
+		{
+			ResXEditorView.SetPropertyPad (SelectedEntry);
 		}
 
 		void nameDataFunc (CellLayout cell_layout, CellRenderer cell, 
@@ -153,8 +160,7 @@ namespace MonoDevelop.NETResources {
 		{
 			var newStore = new ListStore (typeof (ResourceEntry));
 			//var newStore = new ListStore (typeof (ResourceEntry));
-			Gdk.Pixbuf ico;
-			string tooltip = null;
+
 			foreach (var re in Catalog) {
 				if (re is FileRefResourceEntry || re is ObjectResourceEntry) {
 					newStore.AppendValues (re);
@@ -187,9 +193,10 @@ namespace MonoDevelop.NETResources {
 
 		internal void RefreshSelected ()
 		{
+			// careful, sometimes property pad doesnt update with iconview selected item
 			TreeIter treeIter = TreeIter.Zero;
 			store.GetIter (out treeIter, SelectedPath);
-			store.EmitRowChanged (SelectedPath, treeIter);
+			store.EmitRowChanged (SelectedPath, treeIter); // seems to update all items not just path
 		}
 	    }
 }
