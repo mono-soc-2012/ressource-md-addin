@@ -78,12 +78,12 @@ namespace MonoDevelop.NETResources {
 		static internal void SetPropertyPad (object obj)
 		{
 			try {
-			var pad = IdeApp.Workbench.GetPad <MonoDevelop.DesignerSupport.PropertyPad> ();
-			var propPad = (MonoDevelop.DesignerSupport.PropertyPad) pad.Content;
-			var en = ((InvisibleFrame) propPad.Control).AllChildren.GetEnumerator ();
-			en.MoveNext ();
-			var grid = (MonoDevelop.Components.PropertyGrid.PropertyGrid) en.Current;
-			grid.CurrentObject = obj;
+				var pad = IdeApp.Workbench.GetPad <MonoDevelop.DesignerSupport.PropertyPad> ();
+				var propPad = (MonoDevelop.DesignerSupport.PropertyPad) pad.Content;
+				var en = ((InvisibleFrame) propPad.Control).AllChildren.GetEnumerator ();
+				en.MoveNext ();
+				var grid = (MonoDevelop.Components.PropertyGrid.PropertyGrid) en.Current;
+				grid.CurrentObject = obj;
 			} catch (Exception ex) {
 				LoggingService.LogError (GettextCatalog.GetString ("Error occurred in hack to update property pad {0}"), ex);
 				//FIXME: for debugging
