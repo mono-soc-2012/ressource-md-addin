@@ -20,6 +20,8 @@ namespace MonoDevelop.NETResources {
 		List<ResourceEntry> entriesList = new List<ResourceEntry> ();
 		string fileName;
 
+		public Project Project { get; private set;}
+
 		public bool IsDirty {
 			get { return isDirty; }
 			set {
@@ -48,9 +50,9 @@ namespace MonoDevelop.NETResources {
 
 		public ResourceCatalog BaseCatalog { get; private set; }
 
-		public ResourceCatalog () 
+		public ResourceCatalog (Project project) 
 		{
-
+			Project = project;
 		}
 
 		public bool ContainsName (string name)
@@ -144,7 +146,7 @@ namespace MonoDevelop.NETResources {
 			}
 
 			try {
-				ResourceCatalog tempCat = new ResourceCatalog ();
+				ResourceCatalog tempCat = new ResourceCatalog (Project);
 				tempCat.Load (null, baseFilePath);
 				BaseCatalog = tempCat;
 			} catch (Exception ex) {

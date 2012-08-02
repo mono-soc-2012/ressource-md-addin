@@ -11,7 +11,7 @@
     <widget-library name="../bin/Debug/NETResources.dll" internal="true" />
     <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.DesignerSupport/MonoDevelop.DesignerSupport.dll" />
   </import>
-  <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXEditorWidget" design-size="743 610">
+  <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXEditorWidget" design-size="795 610">
     <action-group name="Default">
       <action id="StringResourcesAction">
         <property name="Type">Action</property>
@@ -234,14 +234,72 @@ Public</property>
       </widget>
     </child>
   </widget>
-  <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXObjectIconWidget" design-size="300 300">
+  <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXObjectIconWidget" design-size="462 312">
+    <action-group name="Default">
+      <action id="efwdsfasdfAction">
+        <property name="Type">Action</property>
+        <property name="Label" translatable="yes">efwdsfasdf</property>
+        <property name="ShortLabel" translatable="yes">efwdsfasdf</property>
+      </action>
+      <action id="AddResourceAction">
+        <property name="Type">Action</property>
+        <property name="IsImportant">True</property>
+        <property name="Label" translatable="yes">Add Resource...</property>
+        <property name="ShortLabel" translatable="yes">Add Resource...</property>
+      </action>
+    </action-group>
     <property name="MemberName" />
     <property name="Visible">False</property>
     <child>
-      <widget class="Gtk.IconView" id="entriesIV">
+      <widget class="Gtk.VBox" id="vbox1">
         <property name="MemberName" />
-        <property name="CanFocus">True</property>
-        <property name="ItemWidth">150</property>
+        <property name="Spacing">6</property>
+        <child>
+          <widget class="Gtk.HBox" id="hbox1">
+            <property name="MemberName" />
+            <property name="Spacing">6</property>
+            <child>
+              <widget class="Gtk.Button" id="AddResourceBtn">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Type">TextAndIcon</property>
+                <property name="Icon">stock:gtk-add Menu</property>
+                <property name="Label" translatable="yes">_Add Resource</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnAddResourceClicked" />
+              </widget>
+              <packing>
+                <property name="Position">0</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <placeholder />
+            </child>
+            <child>
+              <placeholder />
+            </child>
+          </widget>
+          <packing>
+            <property name="Position">0</property>
+            <property name="AutoSize">True</property>
+            <property name="Expand">False</property>
+            <property name="Fill">False</property>
+          </packing>
+        </child>
+        <child>
+          <widget class="Gtk.IconView" id="entriesIV">
+            <property name="MemberName" />
+            <property name="CanFocus">True</property>
+            <property name="ItemWidth">150</property>
+          </widget>
+          <packing>
+            <property name="Position">1</property>
+            <property name="AutoSize">True</property>
+          </packing>
+        </child>
       </widget>
     </child>
   </widget>

@@ -5,6 +5,11 @@ using System.Drawing;
 using System.IO;
 using MonoDevelop.Ide;
 using MonoDevelop.Components;
+using MonoDevelop.Core;
+using Mono.TextEditor;
+using MonoDevelop.Projects;
+using MonoDevelop.Ide.Gui.Dialogs;
+using System.Resources;
 
 namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
@@ -75,6 +80,42 @@ namespace MonoDevelop.NETResources {
 			entriesIV.HasTooltip = true;
 			entriesIV.QueryTooltip += tooltipHandler;
 			entriesIV.SelectionChanged += OnEntrySelected;
+			entriesIV.ButtonPressEvent += OnButtonPress;
+
+			entriesIV.PopupMenu += ShowPopupMenu;
+		}
+		//FIXME:  Clicks right of centre on cellrendertext do not select object / GetPathAtPos returns null
+		void OnButtonPress (object o, ButtonPressEventArgs args)
+		{
+			// Ignore double-clicks, triple-clicks, non-right clicks
+			if (args.Event.Type != Gdk.EventType.ButtonPress || args.Event.Button != 3)
+				return;
+
+			TreePath path = entriesIV.GetPathAtPos ((int) args.Event.X, (int) args.Event.Y);
+
+			// avoid menu being displayed over unselected object.
+			if (path != null) {
+				entriesIV.SelectPath (path);
+				ShowPopup (args.Event);
+			}
+		}
+
+		void ShowPopup (Gdk.EventButton evt)
+		{
+			ResourceEntry entry = SelectedEntry;
+			if (entry == null)
+				return;
+			
+			Gtk.Menu contextMenu = ResXEditorWidget.CreateContextMenu (RemoveEntry, entry);
+
+			if (contextMenu != null)
+				GtkWorkarounds.ShowContextMenu (contextMenu, this.entriesIV, evt);
+		}
+
+		void ShowPopupMenu (object o, PopupMenuArgs args)
+		{
+			ShowPopup (null);
+			args.RetVal = true;
 		}
 		void OnEntrySelected (object sender, EventArgs args)
 		{
@@ -155,6 +196,16 @@ namespace MonoDevelop.NETResources {
 			else
 				return Icons ["Other"];
 		}
+
+		void RemoveEntry (ResourceEntry entry)
+		{
+			bool yes = MessageService.AskQuestion (GettextCatalog.GetString ("Do you really want to remove the resource {0}?", entry.Name),
+			                                       AlertButton.Cancel, AlertButton.Remove) == AlertButton.Remove;
+			if (yes) {
+				Catalog.RemoveEntry (entry);
+				UpdateFromCatalog ();
+			}
+		}
 		
 		void UpdateFromCatalog ()
 		{
@@ -198,6 +249,90 @@ namespace MonoDevelop.NETResources {
 			store.GetIter (out treeIter, SelectedPath);
 			store.EmitRowChanged (SelectedPath, treeIter); // seems to update all items not just path
 		}
+
+		protected void OnAddResourceClicked (object sender, EventArgs e)
+		{
+			OpenFileDialog dialog = new OpenFileDialog (GettextCatalog.GetString ("Choose file to add to resources"), Gtk.FileChooserAction.Open);
+			if (dialog.Run ())
+				ProcessNewResource (Catalog.Project, dialog.SelectedFile);
+		}
+
+		void ProcessNewResource (Project project, string fileToAdd)
+		{
+			string typeName = GetTypeForFile (fileToAdd);
+			string resName = System.IO.Path.GetFileNameWithoutExtension (fileToAdd);
+			// ensure unique resName
+			int i = 0;
+			string temp = resName;
+			while (Catalog.ContainsName (temp)) {
+				temp = resName + ++i;
+			}
+			resName = temp;
+
+			if (project == null) { // just link to selected file
+				AddEntry (resName, typeName, fileToAdd);
+				return;
+			}
+			//project not null, copy file to resources folder, warn on overwrite
+			string fileName = System.IO.Path.GetFileName (fileToAdd);
+			string resFolder = System.IO.Path.Combine (project.BaseDirectory.FullPath, "Resources");
+			string newFile = System.IO.Path.Combine (resFolder, fileName);
+
+			if (Directory.Exists (resFolder)) {
+				if (File.Exists (newFile)) {
+					bool overwrite = MessageService.Confirm (GettextCatalog.GetString (
+										"Overwrite existing file?"),
+					                                         GettextCatalog.GetString (
+										"A file named {0} already exists in the Resources folder.", 
+										fileName),
+					                        		AlertButton.OverwriteFile);
+					if (!overwrite)
+						return;
+				}
+			} else {
+				Directory.CreateDirectory (resFolder);
+				project.AddDirectory ("Resources");
+			}
+
+			File.Copy (fileToAdd, newFile, true);
+			project.AddFile (newFile);
+			project.Save (null); //FIXME: ok to save users project here? did this with generate resources wizard too?
+			AddEntry (resName, typeName, newFile);
+		}
+		//FIXME: tidy up?
+		void AddEntry (string name, string typeName, string fileToAdd)
+		{
+			var fileRef = new ResXFileRef (fileToAdd, typeName);
+			var node = new ResXDataNode (name, fileRef);
+			var entry = new FileRefResourceEntry (Catalog, node);
+			Catalog.AddEntry (entry);
+			UpdateFromCatalog ();
+		}
+
+		//FIXME: will always reference 4.0 assemblies
+		string GetTypeForFile (string file)
+		{
+			string ext = System.IO.Path.GetExtension (file).Remove (0,1);//remove .
+			switch (ext.ToLower ()) {
+			case "ico":
+				return typeof (System.Drawing.Icon).AssemblyQualifiedName;
+			case "bmp":
+			case "gif":
+			case "jpeg":
+			case "jpg":
+			case "png":
+			case "tif":
+			case "tiff":
+				return typeof (System.Drawing.Bitmap).AssemblyQualifiedName;
+			case "wav":
+				return typeof (MemoryStream).AssemblyQualifiedName;
+			case "txt":
+				return typeof (string).AssemblyQualifiedName;
+			default:
+				return typeof (byte []).AssemblyQualifiedName;
+			}
+		}
+
 	    }
 }
 

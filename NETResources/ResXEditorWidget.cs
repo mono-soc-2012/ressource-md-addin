@@ -242,25 +242,28 @@ namespace MonoDevelop.NETResources {
 
 		void ShowPopup (EventButton evt)
 		{
-			Gtk.Menu contextMenu = CreateContextMenu ();
-			if (contextMenu != null)
-				GtkWorkarounds.ShowContextMenu (contextMenu, this, evt);
-		}
-
-		Gtk.Menu CreateContextMenu ()
-		{
 			IStringResourceDisplay entry = SelectedEntry;
 			if (entry == null)
-				return null;
-			if (!(entry is ResourceEntry))
-				return null; // FIXME: if its InserterRow should clear its values?
+				return;
+			var resEntry = entry as ResourceEntry;
+			if (resEntry == null)
+				return; // FIXME: if its InserterRow should clear its values?
 
+			Gtk.Menu contextMenu = CreateContextMenu (RemoveEntry, resEntry);
+			if (contextMenu != null)
+				GtkWorkarounds.ShowContextMenu (contextMenu, this, evt);
+
+		}
+
+		public delegate void RemoveEntryFunc (ResourceEntry entry);
+
+		public static Gtk.Menu CreateContextMenu (RemoveEntryFunc removeEntryFunc, ResourceEntry entry)
+		{
 			Gtk.Menu result = new Gtk.Menu ();
-			
 			Gtk.MenuItem item = new Gtk.MenuItem (GettextCatalog.GetString ("Delete"));
 			item.Sensitive = true;
 			item.Activated += delegate {
-				RemoveEntry ((ResourceEntry) entry); 
+				removeEntryFunc (entry); 
 			};
 			item.Show();
 			result.Append (item);

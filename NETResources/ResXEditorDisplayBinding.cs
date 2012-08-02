@@ -28,7 +28,7 @@ namespace MonoDevelop.NETResources {
 			return new Editor.CatalogEditorView (null, filePath);
 			*/
 
-			return new ResXEditorView (filePath);
+			return new ResXEditorView (filePath, project);
 		}
 
 		// Whether the display binding can be used as the default handler for the content types

@@ -8,6 +8,7 @@ using MonoDevelop.Ide.Gui.Content;
 using MonoDevelop.DesignerSupport;
 using MonoDevelop.Ide;
 using MonoDevelop.Components;
+using MonoDevelop.Projects;
 
 namespace MonoDevelop.NETResources {
 	internal class ResXEditorView : AbstractViewContent, IPropertyPadProvider { //, IUndoHandler
@@ -17,10 +18,10 @@ namespace MonoDevelop.NETResources {
 		
 		ResourceCatalog catalog;
 		ResXEditorWidget resXEditorWidget;
-		
-		public ResXEditorView (string resxFile)
+		//FIXME: why is file loaded separately from constructor?
+		public ResXEditorView (string resxFile, Project project)
 		{
-			catalog = new ResourceCatalog ();
+			catalog = new ResourceCatalog (project);
 			resXEditorWidget = new ResXEditorWidget ();
 			catalog.DirtyChanged += delegate (object sender, EventArgs args) {
 				IsDirty = catalog.IsDirty;
