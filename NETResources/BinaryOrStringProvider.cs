@@ -5,25 +5,25 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace MonoDevelop.NETResources {
-	public class OtherFileProvider : EntryProvider, ICustomTypeDescriptor {
-		FileRefResourceEntry FileRefEntry {
-			get { return (FileRefResourceEntry) Entry; }
+	public class BinaryOrStringProvider : EntryProvider, ICustomTypeDescriptor {
+		BinaryOrStringEntry BinaryOrStringEntry {
+			get { return (BinaryOrStringEntry) Entry; }
 		}
-		internal OtherFileProvider (FileRefResourceEntry entry)
+		internal BinaryOrStringProvider (BinaryOrStringEntry entry)
 		{
 			Entry = entry;
 		}
 		
 		public string FileName {
-			get { return FileRefEntry.FileName; }
+			get { return BinaryOrStringEntry.FileName; }
 		}
 		
 		[System.ComponentModel.TypeConverter (typeof (EncodingConverter))]
 		public Encoding TextFileEncoding {
 			get {
-				return FileRefEntry.TextFileEncoding;
+				return BinaryOrStringEntry.TextFileEncoding;
 			} set {
-				FileRefEntry.TextFileEncoding = value;
+				BinaryOrStringEntry.TextFileEncoding = value;
 			}
 		}
 
@@ -41,9 +41,9 @@ namespace MonoDevelop.NETResources {
 				if (value == FileType)
 					return;
 				if (value == FileRefFileType.Text)
-					FileRefEntry.TypeName = typeof (string).AssemblyQualifiedName;
+					BinaryOrStringEntry.TypeName = typeof (string).AssemblyQualifiedName;
 				else
-					FileRefEntry.TypeName = typeof (byte []).AssemblyQualifiedName;
+					BinaryOrStringEntry.TypeName = typeof (byte []).AssemblyQualifiedName;
 			}
 		}
 
@@ -105,7 +105,7 @@ namespace MonoDevelop.NETResources {
 			 * set after first loaded are set to read only mode, and properties that did have IsBrowsable.No
 			 * set on load and now do not remain hidden.
 			 */ 
-			var props = TypeDescriptor.GetProperties (this, arr, true);
+ 			var props = TypeDescriptor.GetProperties (this, arr, true);
 			var propsToUse = new PropertyDescriptorCollection (new PropertyDescriptor [0]);
 			
 			var roAtt = new Attribute [] { ReadOnlyAttribute.Yes };

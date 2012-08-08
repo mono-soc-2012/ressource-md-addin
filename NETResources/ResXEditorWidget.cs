@@ -324,7 +324,7 @@ namespace MonoDevelop.NETResources {
 			ResXEditorView.SetPropertyPad (entry);
 		}
 
-		void AddEntry (StringResourceEntry newEntry)
+		void AddEntry (StringEntry newEntry)
 		{
 			createdAfterSort.Add (newEntry);
 			TreePath currentPath = null;
@@ -360,8 +360,8 @@ namespace MonoDevelop.NETResources {
 			int total = 0, found = 0;
 
 			foreach (var re in Catalog) {
-				if (re is StringResourceEntry) {
-					if (options.ShouldFilter ((StringResourceEntry) re)) {
+				if (re is StringEntry) {
+					if (options.ShouldFilter ((StringEntry) re)) {
 						total++;
 					} else {
 						newStore.AppendValues (re);
@@ -402,7 +402,7 @@ namespace MonoDevelop.NETResources {
 			createdAfterSort.Clear ();
 		}
 
-		List <StringResourceEntry> createdAfterSort = new List <StringResourceEntry> (); // FIXME: shouldnt accept InserterRow
+		List <StringEntry> createdAfterSort = new List <StringEntry> (); // FIXME: shouldnt accept InserterRow
 
 		int nameSortFunc (TreeModel model, TreeIter iter1, TreeIter iter2) 
 		{
@@ -412,7 +412,7 @@ namespace MonoDevelop.NETResources {
 			SortType sortType;
 			((TreeSortable) model).GetSortColumnId (out c, out sortType);
 
-			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringEntry) entry2))
 				return (sortType == SortType.Ascending) ? -1 : 1;
 			else
 				return entry1.Name.CompareTo (entry2.Name);
@@ -427,7 +427,7 @@ namespace MonoDevelop.NETResources {
 			SortType sortType;
 			((TreeSortable) model).GetSortColumnId (out c, out sortType);
 
-			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringEntry) entry2))
 				return (sortType == SortType.Ascending) ? -1 : 1;
 			else
 				return entry1.GetBaseString ().CompareTo (entry2.GetBaseString ());
@@ -441,7 +441,7 @@ namespace MonoDevelop.NETResources {
 			SortType sortType;
 			((TreeSortable) model).GetSortColumnId (out c, out sortType);
 
-			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringEntry) entry2))
 				return (sortType == SortType.Ascending) ? -1 : 1;
 			else
 				return entry1.Value.CompareTo (entry2.Value);
@@ -455,7 +455,7 @@ namespace MonoDevelop.NETResources {
 			SortType sortType;
 			((TreeSortable) model).GetSortColumnId (out c, out sortType);
 
-			if (entry2 is InserterRow || createdAfterSort.Contains ((StringResourceEntry) entry2))
+			if (entry2 is InserterRow || createdAfterSort.Contains ((StringEntry) entry2))
 				return (sortType == SortType.Ascending) ? -1 : 1;
 			else
 				return entry1.Comment.CompareTo (entry2.Comment);
@@ -636,7 +636,7 @@ namespace MonoDevelop.NETResources {
 			return false;
 		}
 
-		public bool ShouldFilter (StringResourceEntry entry)
+		public bool ShouldFilter (StringEntry entry)
 		{
 
 			if (String.IsNullOrEmpty (filter)) 
@@ -811,7 +811,7 @@ namespace MonoDevelop.NETResources {
 		}
 	}
 
-	public delegate void AddEntryFunc (StringResourceEntry newEntry);
+	public delegate void AddEntryFunc (StringEntry newEntry);
 
 	public class InserterRow : IStringResourceDisplay {
 		string name;
@@ -895,7 +895,7 @@ namespace MonoDevelop.NETResources {
 		}
 		void CreateResource ()
 		{
-			StringResourceEntry newEntry = new StringResourceEntry (catalog, Name, Value, Comment);
+			StringEntry newEntry = new StringEntry (catalog, Name, Value, Comment, false);
 			catalog.AddEntry (newEntry);
 			Reset ();
 			addEntryFunc (newEntry);

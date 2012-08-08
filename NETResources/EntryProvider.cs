@@ -32,34 +32,14 @@ namespace MonoDevelop.NETResources {
 
 		public static EntryProvider GetProvider (ResourceEntry entry)
 		{
-			if (entry is StringResourceEntry)
+			if (entry is BinaryOrStringEntry)
+				return new BinaryOrStringProvider ((BinaryOrStringEntry) entry);
+			else if (entry is OtherFileEntry)
+				return new OtherFileProvider ((OtherFileEntry) entry);
+			else if (entry is PersistenceChangingEntry)
+				return new PersistenceChangingProvider ((PersistenceChangingEntry) entry);
+			else //OtherEmbeddedEntry, StringEntry
 				return new EntryProvider (entry);
-			else if (entry is FileRefResourceEntry) {
-				var file = (FileRefResourceEntry) entry;
-				if (IsConvertable (file.TypeName))
-					return new EmbeddableFileProvider (file);
-				else if (file.TypeName.StartsWith ("System.String, mscorlib") || 
-				         file.TypeName.StartsWith ("System.Byte[], mscorlib"))
-					return new OtherFileProvider (file);
-				// else??? what about other types stored in files???
-			} else if (entry is ObjectResourceEntry) {
-				var objEntry = (ObjectResourceEntry) entry;
-				if (IsConvertable (objEntry.TypeName))
-					return new LinkableObjectProvider (objEntry);
-				// else OtherEmbeddedProvider
-			} 
-			//fallback
-			return new EntryProvider (entry);
-		}
-		
-		static bool IsConvertable (string typeName)
-		{
-			if (typeName.StartsWith ("System.Drawing.Icon, System.Drawing") ||
-			         typeName.StartsWith ("System.Drawing.Bitmap, System.Drawing") || 
-			         typeName.StartsWith ("System.IO.MemoryStream, mscorlib"))
-				return true;
-			else
-				return false;
 		}
 
 		bool ValidateNameUI (string oldName, string newName)

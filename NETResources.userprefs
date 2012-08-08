@@ -1,15 +1,19 @@
-﻿<Properties>
+﻿<Properties GitUserInfo="UsingMD">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResXEditorWidget.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResourceEntry.cs">
     <Files>
-      <File FileName="NETResources/ResXEditorWidget.cs" Line="237" Column="12" />
+      <File FileName="NETResources/ResourceEntry.cs" Line="18" Column="3" />
+      <File FileName="NETResources/EntryProvider.cs" Line="87" Column="1" />
+      <File FileName="NETResources/EmbeddableFileProvider.cs" Line="40" Column="13" />
+      <File FileName="NETResources/LinkableObjectProvider.cs" Line="14" Column="1" />
+      <File FileName="NETResources/ResXObjectIconWidget.cs" Line="1" Column="1" />
+      <File FileName="NETResources/ResourceCatalog.cs" Line="64" Column="3" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="NETResources" expanded="True">
-            <Node name="UserInterface" expanded="True" />
-            <Node name="ResXEditorWidget.cs" selected="True" />
+            <Node name="ResourceEntry.cs" selected="True" />
           </Node>
         </State>
       </Pad>
@@ -29,7 +33,10 @@
         </State>
       </Pad>
       <Pad Id="MonoDevelop.Debugger.WatchPad">
-        <State />
+        <State>
+          <Value>args.Event.X</Value>
+          <Value>args.Event.Y</Value>
+        </State>
       </Pad>
     </Pads>
   </MonoDevelop.Ide.Workbench>

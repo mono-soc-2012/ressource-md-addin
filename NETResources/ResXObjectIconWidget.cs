@@ -154,13 +154,13 @@ namespace MonoDevelop.NETResources {
 			ResourceEntry entry = (ResourceEntry) store.GetValue (iter, 0);
 
 			string tip = entry.Name;
-			if (entry is FileRefResourceEntry)
-				tip += "\n" + ((FileRefResourceEntry) entry).FileName;
+			//FIXME: if (entry is FileRefResourceEntry)
+			//	tip += "\n" + ((FileRefResourceEntry) entry).FileName;
 
 			args.Tooltip.Text = tip;
 			args.RetVal = true;
 		}
-
+		/*
 		void tooltipDataFunc (CellLayout cell_layout, CellRenderer cell, 
 		                      TreeModel tree_model, TreeIter iter)
 		{
@@ -179,7 +179,7 @@ namespace MonoDevelop.NETResources {
 							                         (String.IsNullOrEmpty(re.Comment))? "" : "\nComment: " + re.Comment);
 			}
 		}
-
+		*/
 		Gdk.Pixbuf GetIcon (string name)
 		{
 			return Gtk.IconTheme.Default.LoadIcon (name, 48, (IconLookupFlags) 0);
@@ -216,7 +216,7 @@ namespace MonoDevelop.NETResources {
 			var newStore = new ListStore (typeof (ResourceEntry));
 
 			foreach (var re in Catalog) {
-				if (re is FileRefResourceEntry || re is ObjectResourceEntry) {
+				if (!(re is StringEntry)) {//FIXME
 					newStore.AppendValues (re);
 					//newStore.AppendValues (re);
 				}
@@ -315,9 +315,20 @@ namespace MonoDevelop.NETResources {
 		//FIXME: tidy up?
 		void AddEntry (string name, string typeName, string fileToAdd)
 		{
-			var fileRef = new ResXFileRef (fileToAdd, typeName);
-			var node = new ResXDataNode (name, fileRef);
-			var entry = new FileRefResourceEntry (Catalog, node);
+			ResourceEntry entry;
+
+			if (typeName == typeof (string).AssemblyQualifiedName || 
+			    typeName == typeof (byte []).AssemblyQualifiedName)
+				entry = new BinaryOrStringEntry (Catalog, name, fileToAdd, typeName, null, false);
+			else if (typeName == typeof (System.Drawing.Icon).AssemblyQualifiedName)
+				entry = new IconEntry (Catalog, name, fileToAdd, false);
+			else if (typeName == typeof (Bitmap).AssemblyQualifiedName)
+				entry = new ImageEntry (Catalog, name, fileToAdd, false);
+			else if (typeName == typeof (MemoryStream).AssemblyQualifiedName)
+				entry = new AudioEntry (Catalog, name, fileToAdd, false);
+			else 
+				entry = new OtherFileEntry (Catalog, name, fileToAdd, typeName, false);
+
 			Catalog.AddEntry (entry);
 			UpdateFromCatalog ();
 		}

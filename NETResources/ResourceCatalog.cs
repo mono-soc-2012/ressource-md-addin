@@ -175,14 +175,29 @@ namespace MonoDevelop.NETResources {
 					reader.BasePath = Path.GetDirectoryName (resxFile);
 					foreach (DictionaryEntry de in reader) {
 						var node = (ResXDataNode) de.Value;
-
-						if (node.FileRef != null)
-							entriesList.Add (new FileRefResourceEntry (this, node));
-						else if (node.GetValueTypeName (new AssemblyName [0]) == 
-						         typeof (string).AssemblyQualifiedName)
-							entriesList.Add (new StringResourceEntry (this, node));
-						else
-							entriesList.Add (new ObjectResourceEntry (this, node));
+						bool isMeta = false; //FIXME: implement isMeta check
+						string typeName = node.GetValueTypeName (new AssemblyName [0]);
+						// ignore assembly versions
+						if (typeName.StartsWith ("System.Drawing.Icon, System.Drawing"))
+							AddEntry (new IconEntry (this, node, isMeta));
+						else if (typeName.StartsWith ("System.Drawing.Bitmap, System.Drawing"))
+							AddEntry (new ImageEntry (this, node, isMeta));
+						else if (typeName.StartsWith ("System.IO.MemoryStream, mscorlib")) 
+							AddEntry (new AudioEntry (this, node, isMeta));
+						else if (typeName.StartsWith ("System.String, mscorlib")) {
+							if (node.FileRef == null)
+								AddEntry (new StringEntry (this, node, isMeta));
+							else
+								AddEntry (new BinaryOrStringEntry (this, node, isMeta));
+						} else if (typeName.StartsWith ("System.Byte[], mscorlib")) {
+							if (node.FileRef == null)
+								AddEntry (new OtherEmbeddedEntry (this, node, isMeta));
+							else
+								AddEntry (new BinaryOrStringEntry (this, node, isMeta));
+						} else if (node.FileRef == null)
+							AddEntry (new OtherEmbeddedEntry (this, node, isMeta));
+						else 
+							AddEntry (new OtherFileEntry (this, node, isMeta));
 					}
 				}
 				return true;
@@ -250,7 +265,7 @@ namespace MonoDevelop.NETResources {
 				DirtyChanged (this, e);
 		}
 
-		#region IEnumerable<ResourceEntry> Members
+		#region IEnumerable<ResourceEntry2> Members
 		public IEnumerator<ResourceEntry> GetEnumerator ()
 		{
 			return entriesList.GetEnumerator ();

@@ -99,13 +99,21 @@
     <Compile Include="gtk-gui\MonoDevelop.NETResources.ResXEditorWidget.cs" />
     <Compile Include="ResXEditorView.cs" />
     <Compile Include="ResourceCatalog.cs" />
-    <Compile Include="ResourceEntry.cs" />
     <Compile Include="ResXObjectIconWidget.cs" />
     <Compile Include="gtk-gui\MonoDevelop.NETResources.ResXObjectIconWidget.cs" />
-    <Compile Include="OtherFileProvider.cs" />
     <Compile Include="EntryProvider.cs" />
-    <Compile Include="EmbeddableFileProvider.cs" />
-    <Compile Include="LinkableObjectProvider.cs" />
+    <Compile Include="StringEntry.cs" />
+    <Compile Include="OtherEmbeddedEntry.cs" />
+    <Compile Include="OtherFileEntry.cs" />
+    <Compile Include="BinaryOrStringFileEntry.cs" />
+    <Compile Include="PersistenceChangingEntry.cs" />
+    <Compile Include="IconEntry.cs" />
+    <Compile Include="ImageEntry.cs" />
+    <Compile Include="AudioEntry.cs" />
+    <Compile Include="ResourceEntry_1.cs" />
+    <Compile Include="OtherFileProvider2.cs" />
+    <Compile Include="PersistenceChangingProvider.cs" />
+    <Compile Include="BinaryOrStringProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
