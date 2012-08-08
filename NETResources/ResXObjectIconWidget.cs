@@ -153,7 +153,11 @@ namespace MonoDevelop.NETResources {
 
 			ResourceEntry entry = (ResourceEntry) store.GetValue (iter, 0);
 
-			args.Tooltip.Text = entry.Name;
+			string tip = entry.Name;
+			if (entry is FileRefResourceEntry)
+				tip += "\n" + ((FileRefResourceEntry) entry).FileName;
+
+			args.Tooltip.Text = tip;
 			args.RetVal = true;
 		}
 
@@ -210,7 +214,6 @@ namespace MonoDevelop.NETResources {
 		void UpdateFromCatalog ()
 		{
 			var newStore = new ListStore (typeof (ResourceEntry));
-			//var newStore = new ListStore (typeof (ResourceEntry));
 
 			foreach (var re in Catalog) {
 				if (re is FileRefResourceEntry || re is ObjectResourceEntry) {
@@ -218,36 +221,46 @@ namespace MonoDevelop.NETResources {
 					//newStore.AppendValues (re);
 				}
 			}
-			/*
+
 			newStore.DefaultSortFunc = nameSortFunc;
 			newStore.SetSortFunc (0, nameSortFunc);
-			newStore.SetSortFunc (1, baseValueSortFunc);
-			newStore.SetSortFunc (2, valueSortFunc);
-			newStore.SetSortFunc (3, commentSortFunc);
+			newStore.SetSortColumnId (0,SortType.Ascending);
 
-			int sortCol;
-			SortType sortType;
-			store.GetSortColumnId (out sortCol,out sortType);
-			newStore.SetSortColumnId (sortCol, sortType);
-			newStore.SortColumnChanged += HandleSortColumnChanged;
-
-			*/
 			if (store != null)
 				store.Dispose ();
 			entriesIV.Model = store = newStore;
+		}
+
+		int nameSortFunc (TreeModel model, TreeIter iter1, TreeIter iter2) 
+		{
+			var entry1 = (ResourceEntry) model.GetValue (iter1, 0);
+			var entry2 = (ResourceEntry) model.GetValue (iter2, 0);
+			return entry1.Name.CompareTo (entry2.Name);
 		}
 		
 		internal object GetObjectForPropPad ()
 		{
 			return SelectedEntry;
 		}
-
-		internal void RefreshSelected ()
+		//FIXME: the fact all this logic is required is messy
+		internal void Refresh ()
 		{
-			// careful, sometimes property pad doesnt update with iconview selected item
-			TreeIter treeIter = TreeIter.Zero;
-			store.GetIter (out treeIter, SelectedPath);
-			store.EmitRowChanged (SelectedPath, treeIter); // seems to update all items not just path
+			Gtk.TreePath oldPath = SelectedPath;
+			ResourceEntry oldEntry = SelectedEntry;
+			UpdateFromCatalog ();
+			// select object at same position to account for object recreations when converted from linked to embedded
+			entriesIV.SelectPath (oldPath);
+			// if object at this position doesnt match old object, ie due to sorting, try to find and select old object
+			if (SelectedEntry.Name != oldEntry.Name) { //oldEntry.Name will have current name
+				store.Foreach (delegate (TreeModel model, TreePath path, TreeIter iter) {
+					object obj = model.GetValue (iter, 0);
+					if (((ResourceEntry) obj).Name == oldEntry.Name) {
+						entriesIV.SelectPath (path);
+						return true; // stops further iterations
+					} else
+						return false;
+				});
+			}
 		}
 
 		protected void OnAddResourceClicked (object sender, EventArgs e)
@@ -316,6 +329,9 @@ namespace MonoDevelop.NETResources {
 			switch (ext.ToLower ()) {
 			case "ico":
 				return typeof (System.Drawing.Icon).AssemblyQualifiedName;
+			case "emf":
+			case "exif":
+			case "wmf":
 			case "bmp":
 			case "gif":
 			case "jpeg":

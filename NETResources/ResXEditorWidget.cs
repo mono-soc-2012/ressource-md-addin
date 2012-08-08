@@ -66,6 +66,8 @@ namespace MonoDevelop.NETResources {
 
 		InserterRow Inserter;
 
+
+
 		public ResXEditorWidget ()
 		{
 			this.Build (); // in gui designer's partial class
@@ -319,7 +321,7 @@ namespace MonoDevelop.NETResources {
 				Inserter.Deselected ();
 			}
 
-			ResXEditorView.SetPropertyPad (SelectedEntry);
+			ResXEditorView.SetPropertyPad (entry);
 		}
 
 		void AddEntry (StringResourceEntry newEntry)
@@ -512,10 +514,8 @@ namespace MonoDevelop.NETResources {
 			switch (pagesNotebook.CurrentPage) {
 			case 0:
 				return SelectedEntry;
-				break;
 			case 1:
 				return objectIconWidget.GetObjectForPropPad ();
-				break;
 			default:
 				return null; // property pad may call before editor finished loading
 			}
@@ -530,7 +530,8 @@ namespace MonoDevelop.NETResources {
 				store.EmitRowChanged (treePath, SelectedIter);
 				break;
 			case 1:
-				objectIconWidget.RefreshSelected ();
+				//refresh all to account for persistence changes which remove and add objects
+				objectIconWidget.Refresh ();
 				break;
 			}
 		}

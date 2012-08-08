@@ -48,11 +48,18 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
+
+
 		public ResourceCatalog BaseCatalog { get; private set; }
 
 		public ResourceCatalog (Project project) 
 		{
 			Project = project;
+		}
+
+		public bool Contains (ResourceEntry entry)
+		{
+			return entriesList.Contains (entry);
 		}
 
 		public bool ContainsName (string name)
@@ -165,7 +172,7 @@ namespace MonoDevelop.NETResources {
 			try {
 				using (var reader = new ResXResourceReader (resxFile)) {
 					reader.UseResXDataNodes = true;
-
+					reader.BasePath = Path.GetDirectoryName (resxFile);
 					foreach (DictionaryEntry de in reader) {
 						var node = (ResXDataNode) de.Value;
 

@@ -102,6 +102,10 @@
     <Compile Include="ResourceEntry.cs" />
     <Compile Include="ResXObjectIconWidget.cs" />
     <Compile Include="gtk-gui\MonoDevelop.NETResources.ResXObjectIconWidget.cs" />
+    <Compile Include="OtherFileProvider.cs" />
+    <Compile Include="EntryProvider.cs" />
+    <Compile Include="EmbeddableFileProvider.cs" />
+    <Compile Include="LinkableObjectProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

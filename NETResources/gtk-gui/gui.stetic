@@ -293,7 +293,7 @@ Public</property>
           <widget class="Gtk.IconView" id="entriesIV">
             <property name="MemberName" />
             <property name="CanFocus">True</property>
-            <property name="ItemWidth">150</property>
+            <property name="ItemWidth">100</property>
           </widget>
           <packing>
             <property name="Position">1</property>

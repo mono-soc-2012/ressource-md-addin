@@ -71,7 +71,7 @@ namespace MonoDevelop.NETResources
 			this.entriesIV = new global::Gtk.IconView ();
 			this.entriesIV.CanFocus = true;
 			this.entriesIV.Name = "entriesIV";
-			this.entriesIV.ItemWidth = 150;
+			this.entriesIV.ItemWidth = 100;
 			this.vbox1.Add (this.entriesIV);
 			global::Gtk.Box.BoxChild w13 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.entriesIV]));
 			w13.Position = 1;

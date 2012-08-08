@@ -62,7 +62,12 @@ namespace MonoDevelop.NETResources {
 
 		public object GetProvider ()
 		{
-			return GetActiveComponent ();
+			object obj = GetActiveComponent ();
+
+			if (obj is ResourceEntry)
+				return EntryProvider.GetProvider ((ResourceEntry) obj);
+			else
+				return null; // nothing will be shown
 		}
 
 		public void OnEndEditing (object obj)
@@ -75,16 +80,23 @@ namespace MonoDevelop.NETResources {
 		}
 
 		#endregion
+
 		//FIXME: very hacky solution to keeping pad up to date!!!!!!
-		static internal void SetPropertyPad (object obj)
+		internal static void SetPropertyPad (object obj)
 		{
+			object [] providers;
+			if (obj is ResourceEntry)
+			providers = new object [] { EntryProvider.GetProvider ((ResourceEntry) obj) };
+			else
+				providers = new object [0]; // prop pad will show nothing
+
 			try {
 				var pad = IdeApp.Workbench.GetPad <MonoDevelop.DesignerSupport.PropertyPad> ();
 				var propPad = (MonoDevelop.DesignerSupport.PropertyPad) pad.Content;
 				var en = ((InvisibleFrame) propPad.Control).AllChildren.GetEnumerator ();
 				en.MoveNext ();
 				var grid = (MonoDevelop.Components.PropertyGrid.PropertyGrid) en.Current;
-				grid.CurrentObject = obj;
+				grid.SetCurrentObject (obj, providers);
 			} catch (Exception ex) {
 				LoggingService.LogError (GettextCatalog.GetString ("Error occurred in hack to update property pad {0}"), ex);
 				//FIXME: for debugging
