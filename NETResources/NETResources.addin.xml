@@ -32,4 +32,9 @@
 		<DisplayBinding id = "ResXEditor" insertbefore ="DefaultDisplayBinding" class = "MonoDevelop.NETResources.ResXEditorDisplayBinding"/>
 	</Extension>
 	
+	<Extension path = "/MonoDevelop/Ide/CustomTools">
+		<Tool name="ResXCodeFileGenerator" type="MonoDevelop.NETResources.CustomTools.ResXCodeFileGenerator"/>
+		<Tool name="PublicResXCodeFileGenerator" type="MonoDevelop.NETResources.CustomTools.PublicResXCodeFileGenerator"/>
+	</Extension>
+	
 </Addin>

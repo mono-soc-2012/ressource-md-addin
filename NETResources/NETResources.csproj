@@ -90,6 +90,13 @@
     <Reference Include="MonoDevelop.DesignerSupport">
       <HintPath>..\..\..\monodevelop\main\build\AddIns\MonoDevelop.DesignerSupport\MonoDevelop.DesignerSupport.dll</HintPath>
     </Reference>
+    <Reference Include="System.Design" />
+    <Reference Include="MonoDevelop.AspNet">
+      <HintPath>..\..\..\monodevelop\main\build\AddIns\MonoDevelop.AspNet\MonoDevelop.AspNet.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoDevelop.AspNet.Mvc">
+      <HintPath>..\..\..\monodevelop\main\build\AddIns\MonoDevelop.AspNet.Mvc\MonoDevelop.AspNet.Mvc.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -114,6 +121,9 @@
     <Compile Include="OtherFileProvider2.cs" />
     <Compile Include="PersistenceChangingProvider.cs" />
     <Compile Include="BinaryOrStringProvider.cs" />
+    <Compile Include="CustomTools\ThreadAsyncOperation.cs" />
+    <Compile Include="CustomTools\ResXCodeFileGenerator.cs" />
+    <Compile Include="CustomTools\PublicResXCodeFileGenerator.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -121,5 +131,8 @@
     <EmbeddedResource Include="gtk-gui\gui.stetic">
       <LogicalName>gui.stetic</LogicalName>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="CustomTools\" />
   </ItemGroup>
 </Project>
