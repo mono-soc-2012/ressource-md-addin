@@ -10,6 +10,7 @@ using Mono.TextEditor;
 using MonoDevelop.Projects;
 using MonoDevelop.Ide.Gui.Dialogs;
 using System.Resources;
+using MonoDevelop.Components.Extensions;
 
 namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
@@ -24,7 +25,7 @@ namespace MonoDevelop.NETResources {
 		ListStore store;
 		Dictionary <string, Gdk.Pixbuf> Icons = new Dictionary <string, Gdk.Pixbuf> ();
 		
-		internal ResourceCatalog Catalog {
+		private ResourceCatalog Catalog {
 			get {
 				return catalog;
 			} set {
@@ -32,6 +33,8 @@ namespace MonoDevelop.NETResources {
 				UpdateFromCatalog ();
 			}
 		}
+
+		internal Type FilterType { get; set; }
 
 		TreePath SelectedPath {
 			get {
@@ -84,6 +87,13 @@ namespace MonoDevelop.NETResources {
 
 			entriesIV.PopupMenu += ShowPopupMenu;
 		}
+
+		internal void SetCatalog<T> (ResourceCatalog _catalog)
+		{
+			FilterType = typeof (T);
+			Catalog = _catalog;
+		}
+
 		//FIXME:  Clicks right of centre on cellrendertext do not select object / GetPathAtPos returns null
 		void OnButtonPress (object o, ButtonPressEventArgs args)
 		{
@@ -216,10 +226,8 @@ namespace MonoDevelop.NETResources {
 			var newStore = new ListStore (typeof (ResourceEntry));
 
 			foreach (var re in Catalog) {
-				if (!(re is StringEntry)) {//FIXME
+				if (FilterType.IsAssignableFrom (re.GetType ()))
 					newStore.AppendValues (re);
-					//newStore.AppendValues (re);
-				}
 			}
 
 			newStore.DefaultSortFunc = nameSortFunc;
@@ -242,15 +250,16 @@ namespace MonoDevelop.NETResources {
 		{
 			return SelectedEntry;
 		}
-		//FIXME: the fact all this logic is required is messy
+		// keeps view sorted while tracking selected object during renames, was of greater importance 
+		// when persistence change implementation deleted and recreated objects from prop pad
 		internal void Refresh ()
 		{
 			Gtk.TreePath oldPath = SelectedPath;
 			ResourceEntry oldEntry = SelectedEntry;
 			UpdateFromCatalog ();
-			// select object at same position to account for object recreations when converted from linked to embedded
+			// select object again
 			entriesIV.SelectPath (oldPath);
-			// if object at this position doesnt match old object, ie due to sorting, try to find and select old object
+			// if object at this position doesnt match old object try to find and select old object
 			if (SelectedEntry.Name != oldEntry.Name) { //oldEntry.Name will have current name
 				store.Foreach (delegate (TreeModel model, TreePath path, TreeIter iter) {
 					object obj = model.GetValue (iter, 0);
@@ -263,9 +272,31 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
-		protected void OnAddResourceClicked (object sender, EventArgs e)
+		static string [] imageFilters = new string [] { "*.emf","*.exif","*.wmf","*.bmp","*.gif",
+								"*.jpeg","*.jpg","*.png","*.tif","*.tiff" };
+
+		SelectFileDialogFilter GetFileFilters ()
 		{
-			OpenFileDialog dialog = new OpenFileDialog (GettextCatalog.GetString ("Choose file to add to resources"), Gtk.FileChooserAction.Open);
+			if (FilterType.IsAssignableFrom (typeof (OtherFileEntry)))
+				return new SelectFileDialogFilter ("All Files (*.*)", "*.*");
+			else if (FilterType.IsAssignableFrom (typeof (AudioEntry)))
+				return new SelectFileDialogFilter ("Audio (*.wav)", "*.wav");
+			else if (FilterType.IsAssignableFrom (typeof (IconEntry)))
+				return new SelectFileDialogFilter ("Icon (*.ico)", "*.ico");
+			else if (FilterType.IsAssignableFrom (typeof (ImageEntry))) {
+				string name = "Image (" + String.Join (",", imageFilters) + ")";
+				return new SelectFileDialogFilter (name, imageFilters);
+			} else
+				throw new Exception ("no support for adding this type of resource");
+		}
+
+		public void AddResource ()
+		{
+			OpenFileDialog dialog = new OpenFileDialog (GettextCatalog.GetString ("Choose file to add to resources"), 
+			                                            Gtk.FileChooserAction.Open);
+
+			dialog.AddFilter (GetFileFilters ());
+
 			if (dialog.Run ())
 				ProcessNewResource (Catalog.Project, dialog.SelectedFile);
 		}
@@ -333,10 +364,20 @@ namespace MonoDevelop.NETResources {
 			UpdateFromCatalog ();
 		}
 
+		public void DeleteBtnClick ()
+		{
+			if (SelectedEntry != null)
+				RemoveEntry (SelectedEntry);
+		}
+
 		//FIXME: will always reference 4.0 assemblies
 		string GetTypeForFile (string file)
 		{
-			string ext = System.IO.Path.GetExtension (file).Remove (0,1);//remove .
+			string ext = System.IO.Path.GetExtension (file);
+
+			if (!(ext == String.Empty))
+				ext = ext.Remove (0,1); //preceeding .
+
 			switch (ext.ToLower ()) {
 			case "ico":
 				return typeof (System.Drawing.Icon).AssemblyQualifiedName;

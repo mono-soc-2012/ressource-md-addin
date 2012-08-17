@@ -16,6 +16,10 @@ using MonoDevelop.Ide;
 using System.ComponentModel;
 //using System.Threading;
 using MonoDevelop.Components;
+using MonoDevelop.Components.PropertyGrid;
+using MonoDevelop.Projects;
+using MonoDevelop.AspNet;
+using MonoDevelop.AspNet.Mvc;
 
 namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
@@ -36,7 +40,8 @@ namespace MonoDevelop.NETResources {
 				catalog = value;
 				UpdateFromCatalog ();
 				UpdateProgressBar ();
-				objectIconWidget.Catalog = catalog;
+				SetupCodeGenCombo ();
+				//objectIconWidget.Catalog = catalog;
 			}
 		}
 
@@ -122,6 +127,76 @@ namespace MonoDevelop.NETResources {
 			entriesTV.Selection.Changed += OnEntrySelected;
 
 			store.SetSortColumnId (0, SortType.Ascending);
+		}
+
+		void SetupCodeGenCombo ()
+		{
+			ProjectFile pf = catalog.ProjectFile;
+
+			if (pf == null) {// no project
+				CodeGenCombo.Active = 0;
+				CodeGenCombo.Sensitive = false;
+				return;
+			}
+
+			// reflect current tool
+			if (pf.Generator == "ResXCodeFileGenerator")
+				CodeGenCombo.Active = 1;
+			else if (pf.Generator == "PublicResXCodeFileGenerator")
+				CodeGenCombo.Active = 2;
+			else if (String.IsNullOrEmpty (pf.Generator))
+				CodeGenCombo.Active = 0;
+			else {
+				// user selected a different tool, reflect that and exit
+				CodeGenCombo.InsertText (3,"Custom Tool");
+				CodeGenCombo.Active = 3;
+				CodeGenCombo.Sensitive = false;
+				return;
+			}
+
+			// FIXME: (no code gen tool for global asp.net special folder yet with resx file set to content )
+			// disable if not embedded resource 
+			if (pf.BuildAction != BuildAction.EmbeddedResource) {
+				CodeGenCombo.Sensitive = false;
+				// warn user about incompatible tools
+				if (CodeGenCombo.Active != 0) {
+					string msg = "The code gen tool currently selected for this file does not support it"
+							+ " as the file is not marked an embedded resource, deselect the tool?\n"
+							+ "(Beware the previously generated code file may not work)";
+					bool yes = MessageService.Confirm (pf.FilePath.ToRelative (pf.Project.BaseDirectory).ToString (),
+					                                   GettextCatalog.GetString (msg),AlertButton.Yes);
+					if (yes) {
+						CodeGenCombo.Active = 0;
+					}
+				}
+			}
+
+			/* would identify asp.net special folders
+			if (pf.Project is AspNetAppProject || pf.Project is AspMvcProject)
+			{
+				string localResDir = (System.IO.Path.DirectorySeparatorChar + "App_LocalResources").ToLower ();
+				string globalResDir = (System.IO.Path.Combine (pf.Project.BaseDirectory, "App_GlobalResources")).ToLower ();
+				string fileDir = pf.FilePath.ParentDirectory.ToString ().ToLower ();
+				if (fileDir.EndsWith (localResDir) || fileDir == globalResDir) {
+					// proxy generator would be used
+					return;
+				}
+			}*/
+		}
+
+		//FIXME: duplicate *.designer.cs files present in solution tree until solution reloaded
+		void RemoveCodeGenFileFor (ProjectFile pf)
+		{
+			if (String.IsNullOrEmpty (pf.LastGenOutput)) 
+				return;
+
+			string lastOutput = System.IO.Path.Combine (pf.FilePath.ParentDirectory, pf.LastGenOutput);
+			pf.LastGenOutput = null;
+
+			if (System.IO.File.Exists (lastOutput))
+				System.IO.File.Delete (lastOutput);
+
+			pf.Project.Files.Remove (pf.Project.GetProjectFile (lastOutput));
 		}
 		
 		void nameEditedHandler (object o, Gtk.EditedArgs args) 
@@ -308,8 +383,7 @@ namespace MonoDevelop.NETResources {
 		}
 		#endregion
 		bool inserterWasSelected = false;
-		//handle InserterRow FIXME: wont be saved if user moves focus out of editor then saves
-		//FIXME: should save with emty string / comment if name changed from default
+
 		void OnEntrySelected (object sender, EventArgs args)
 		{			
 			IStringResourceDisplay entry = SelectedEntry;
@@ -493,20 +567,37 @@ namespace MonoDevelop.NETResources {
 			*/
 		}		
 
-				
-		protected void OnStringResourcesActivated (object sender, EventArgs e)
+		protected void OnSelectorTBActionActivated (object sender, EventArgs e)
 		{
-			pagesNotebook.CurrentPage = 0;
-		}
-		protected void OnOtherResourcesActivated (object sender, EventArgs e)
-		{
+			var action = (Gtk.Action) sender;
+
+			AddBtn.Sensitive = true; // set to false later where additions not supported
+
+			if (action.Name == "StringsAction") {
+				pagesNotebook.CurrentPage = 0;
+				return;
+			}
+			// so should use ObjectIconWizard
 			pagesNotebook.CurrentPage = 1;
-			objectIconWidget.Catalog = catalog;
 
-			MonoDevelop.Components.PropertyGrid.PropertyGrid grid = new MonoDevelop.Components.PropertyGrid.PropertyGrid ();
-
-			grid.Refresh();
-
+			switch (action.Name) {
+			case "IconsAction":
+				objectIconWidget.SetCatalog <IconEntry> (catalog);
+				break;
+			case "ImagesAction":
+				objectIconWidget.SetCatalog <ImageEntry> (catalog);
+				break;
+			case "AudioAction":
+				objectIconWidget.SetCatalog <AudioEntry> (catalog);
+				break;
+			case "OtherFilesAction":
+				objectIconWidget.SetCatalog <OtherFileEntry> (catalog);
+				break;
+			case "OtherEmbeddedAction":
+				AddBtn.Sensitive = false;
+				objectIconWidget.SetCatalog <OtherEmbeddedEntry> (catalog);
+				break;
+			}
 		}
 
 		internal object GetObjectForPropPad ()
@@ -530,10 +621,76 @@ namespace MonoDevelop.NETResources {
 				store.EmitRowChanged (treePath, SelectedIter);
 				break;
 			case 1:
-				//refresh all to account for persistence changes which remove and add objects
 				objectIconWidget.Refresh ();
 				break;
 			}
+		}
+
+		protected void OnAddBtnClick (object sender, EventArgs e)
+		{
+			switch (pagesNotebook.CurrentPage) {
+			case 0:
+				// select Inserter
+				store.Foreach (delegate (TreeModel model, TreePath path, TreeIter iter) {
+					object obj = model.GetValue (iter, 0);
+					if (obj == Inserter) {
+						entriesTV.Selection.SelectPath (path);
+						return true; // stops further iterations
+					} else
+						return false;
+				});
+				break;
+			case 1:
+				objectIconWidget.AddResource ();
+				break;
+			default:
+				throw new Exception ("only 2 pages supported byt this operation");
+			}
+		}
+		
+		protected void OnDeleteBtnClick (object sender, EventArgs e)
+		{
+			switch (pagesNotebook.CurrentPage) {
+			case 0:
+				var entry = SelectedEntry as ResourceEntry;
+				if (entry != null)
+					RemoveEntry (entry);
+				break;
+			case 1:
+				objectIconWidget.DeleteBtnClick ();
+				break;
+			default:
+				throw new Exception ("only 2 pages supported byt this operation");
+			}
+		}
+
+		protected void OnCodeGenComboChanged (object sender, EventArgs e)
+		{
+			ProjectFile pf = Catalog.ProjectFile;
+
+			if (pf == null) // not part of project
+				throw new Exception ("file not part of project");
+
+			switch (CodeGenCombo.ActiveText) {
+			case "No Generation":
+				pf.Generator = null;
+				RemoveCodeGenFileFor (pf);
+				break;
+			case "Public Class":
+				if (pf.Generator != "PublicResXCodeFileGenerator") {
+					RemoveCodeGenFileFor (pf);
+					pf.Generator = "PublicResXCodeFileGenerator";
+				}
+				break;
+			case "Internal Class":
+				if (pf.Generator != "ResXCodeFileGenerator") {
+					RemoveCodeGenFileFor (pf);
+					pf.Generator = "ResXCodeFileGenerator";
+				}
+				break;
+			// (could also be "Custom Tool" as added during SetupCodeGenCombo)
+			}
+			pf.Project.Save (null); //FIXME: ok to save here?
 		}
 
     }

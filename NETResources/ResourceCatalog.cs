@@ -48,7 +48,13 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
-
+		public ProjectFile ProjectFile {
+			get {
+				if (Project == null)
+					return null;
+				return Project.GetProjectFile (fileName);
+			}
+		}
 
 		public ResourceCatalog BaseCatalog { get; private set; }
 

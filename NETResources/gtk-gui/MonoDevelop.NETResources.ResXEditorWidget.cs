@@ -7,9 +7,18 @@ namespace MonoDevelop.NETResources
 		private global::Gtk.UIManager UIManager;
 		private global::Gtk.Action StringResourcesAction;
 		private global::Gtk.Action OtherAction;
-		private global::Gtk.RadioAction StringResourcesAction1;
-		private global::Gtk.RadioAction OtherResourcesAction;
+		private global::Gtk.RadioAction StringsAction;
+		private global::Gtk.RadioAction ImagesAction;
+		private global::Gtk.RadioAction IconsAction;
+		private global::Gtk.RadioAction AudioAction;
+		private global::Gtk.RadioAction OtherFilesAction;
+		private global::Gtk.RadioAction OtherEmbeddedAction;
 		private global::Gtk.VBox vbox1;
+		private global::Gtk.HBox hbox4;
+		private global::Gtk.Button AddBtn;
+		private global::Gtk.Button DeleteBtn;
+		private global::Gtk.Label AccessorLabel;
+		private global::Gtk.ComboBox CodeGenCombo;
 		private global::Gtk.Notebook pagesNotebook;
 		private global::Gtk.VBox vbox2;
 		private global::Gtk.HBox hbox1;
@@ -19,12 +28,8 @@ namespace MonoDevelop.NETResources
 		private global::Gtk.TreeView entriesTV;
 		private global::MonoDevelop.NETResources.ResXObjectIconWidget objectIconWidget;
 		private global::Gtk.Label label4;
-		private global::Gtk.HBox hbox2;
-		private global::Gtk.Toolbar pagesToolBar;
-		private global::Gtk.Label CreateClassLabel;
-		private global::Gtk.ComboBox StronglyTypedCombo;
-		private global::Gtk.ComboBox AccessorCombo;
-		private global::Gtk.Label AccessorLabel;
+		private global::Gtk.HBox hbox3;
+		private global::Gtk.Toolbar selectorTB;
 		
 		protected virtual void Build ()
 		{
@@ -41,18 +46,42 @@ namespace MonoDevelop.NETResources
 			this.OtherAction.HideIfEmpty = false;
 			this.OtherAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Resources");
 			w2.Add (this.OtherAction, null);
-			this.StringResourcesAction1 = new global::Gtk.RadioAction ("StringResourcesAction1", global::Mono.Unix.Catalog.GetString ("String Resources"), null, null, 0);
-			this.StringResourcesAction1.Group = new global::GLib.SList (global::System.IntPtr.Zero);
-			this.StringResourcesAction1.HideIfEmpty = false;
-			this.StringResourcesAction1.IsImportant = true;
-			this.StringResourcesAction1.ShortLabel = global::Mono.Unix.Catalog.GetString ("String Resources");
-			w2.Add (this.StringResourcesAction1, null);
-			this.OtherResourcesAction = new global::Gtk.RadioAction ("OtherResourcesAction", global::Mono.Unix.Catalog.GetString ("Other Resources"), null, null, 0);
-			this.OtherResourcesAction.Group = this.StringResourcesAction1.Group;
-			this.OtherResourcesAction.HideIfEmpty = false;
-			this.OtherResourcesAction.IsImportant = true;
-			this.OtherResourcesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Resources");
-			w2.Add (this.OtherResourcesAction, null);
+			this.StringsAction = new global::Gtk.RadioAction ("StringsAction", global::Mono.Unix.Catalog.GetString ("Strings"), null, null, 0);
+			this.StringsAction.Group = new global::GLib.SList (global::System.IntPtr.Zero);
+			this.StringsAction.HideIfEmpty = false;
+			this.StringsAction.IsImportant = true;
+			this.StringsAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Strings");
+			w2.Add (this.StringsAction, null);
+			this.ImagesAction = new global::Gtk.RadioAction ("ImagesAction", global::Mono.Unix.Catalog.GetString ("Images"), null, null, 0);
+			this.ImagesAction.Group = this.StringsAction.Group;
+			this.ImagesAction.HideIfEmpty = false;
+			this.ImagesAction.IsImportant = true;
+			this.ImagesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Images");
+			w2.Add (this.ImagesAction, null);
+			this.IconsAction = new global::Gtk.RadioAction ("IconsAction", global::Mono.Unix.Catalog.GetString ("Icons"), null, null, 0);
+			this.IconsAction.Group = this.StringsAction.Group;
+			this.IconsAction.HideIfEmpty = false;
+			this.IconsAction.IsImportant = true;
+			this.IconsAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Icons");
+			w2.Add (this.IconsAction, null);
+			this.AudioAction = new global::Gtk.RadioAction ("AudioAction", global::Mono.Unix.Catalog.GetString ("Audio"), null, null, 0);
+			this.AudioAction.Group = this.StringsAction.Group;
+			this.AudioAction.HideIfEmpty = false;
+			this.AudioAction.IsImportant = true;
+			this.AudioAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Audio");
+			w2.Add (this.AudioAction, null);
+			this.OtherFilesAction = new global::Gtk.RadioAction ("OtherFilesAction", global::Mono.Unix.Catalog.GetString ("Other Files"), null, null, 0);
+			this.OtherFilesAction.Group = this.AudioAction.Group;
+			this.OtherFilesAction.HideIfEmpty = false;
+			this.OtherFilesAction.IsImportant = true;
+			this.OtherFilesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Files");
+			w2.Add (this.OtherFilesAction, null);
+			this.OtherEmbeddedAction = new global::Gtk.RadioAction ("OtherEmbeddedAction", global::Mono.Unix.Catalog.GetString ("Other Embedded"), null, null, 0);
+			this.OtherEmbeddedAction.Group = this.AudioAction.Group;
+			this.OtherEmbeddedAction.HideIfEmpty = false;
+			this.OtherEmbeddedAction.IsImportant = true;
+			this.OtherEmbeddedAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Embedded");
+			w2.Add (this.OtherEmbeddedAction, null);
 			this.UIManager.InsertActionGroup (w2, 0);
 			this.Name = "MonoDevelop.NETResources.ResXEditorWidget";
 			// Container child MonoDevelop.NETResources.ResXEditorWidget.Gtk.Container+ContainerChild
@@ -60,10 +89,91 @@ namespace MonoDevelop.NETResources
 			this.vbox1.Name = "vbox1";
 			this.vbox1.Spacing = 6;
 			// Container child vbox1.Gtk.Box+BoxChild
+			this.hbox4 = new global::Gtk.HBox ();
+			this.hbox4.Name = "hbox4";
+			this.hbox4.Spacing = 6;
+			// Container child hbox4.Gtk.Box+BoxChild
+			this.AddBtn = new global::Gtk.Button ();
+			this.AddBtn.CanFocus = true;
+			this.AddBtn.Name = "AddBtn";
+			this.AddBtn.UseUnderline = true;
+			// Container child AddBtn.Gtk.Container+ContainerChild
+			global::Gtk.Alignment w3 = new global::Gtk.Alignment (0.5F, 0.5F, 0F, 0F);
+			// Container child GtkAlignment.Gtk.Container+ContainerChild
+			global::Gtk.HBox w4 = new global::Gtk.HBox ();
+			w4.Spacing = 2;
+			// Container child GtkHBox.Gtk.Container+ContainerChild
+			global::Gtk.Image w5 = new global::Gtk.Image ();
+			w5.Pixbuf = global::Stetic.IconLoader.LoadIcon (this, "gtk-add", global::Gtk.IconSize.Menu);
+			w4.Add (w5);
+			// Container child GtkHBox.Gtk.Container+ContainerChild
+			global::Gtk.Label w7 = new global::Gtk.Label ();
+			w7.LabelProp = global::Mono.Unix.Catalog.GetString ("_Add Resource");
+			w7.UseUnderline = true;
+			w4.Add (w7);
+			w3.Add (w4);
+			this.AddBtn.Add (w3);
+			this.hbox4.Add (this.AddBtn);
+			global::Gtk.Box.BoxChild w11 = ((global::Gtk.Box.BoxChild)(this.hbox4 [this.AddBtn]));
+			w11.Position = 0;
+			w11.Expand = false;
+			w11.Fill = false;
+			// Container child hbox4.Gtk.Box+BoxChild
+			this.DeleteBtn = new global::Gtk.Button ();
+			this.DeleteBtn.CanFocus = true;
+			this.DeleteBtn.Name = "DeleteBtn";
+			this.DeleteBtn.UseUnderline = true;
+			// Container child DeleteBtn.Gtk.Container+ContainerChild
+			global::Gtk.Alignment w12 = new global::Gtk.Alignment (0.5F, 0.5F, 0F, 0F);
+			// Container child GtkAlignment.Gtk.Container+ContainerChild
+			global::Gtk.HBox w13 = new global::Gtk.HBox ();
+			w13.Spacing = 2;
+			// Container child GtkHBox.Gtk.Container+ContainerChild
+			global::Gtk.Image w14 = new global::Gtk.Image ();
+			w14.Pixbuf = global::Stetic.IconLoader.LoadIcon (this, "gtk-delete", global::Gtk.IconSize.Menu);
+			w13.Add (w14);
+			// Container child GtkHBox.Gtk.Container+ContainerChild
+			global::Gtk.Label w16 = new global::Gtk.Label ();
+			w16.LabelProp = global::Mono.Unix.Catalog.GetString ("_Delete Resource");
+			w16.UseUnderline = true;
+			w13.Add (w16);
+			w12.Add (w13);
+			this.DeleteBtn.Add (w12);
+			this.hbox4.Add (this.DeleteBtn);
+			global::Gtk.Box.BoxChild w20 = ((global::Gtk.Box.BoxChild)(this.hbox4 [this.DeleteBtn]));
+			w20.Position = 1;
+			w20.Expand = false;
+			w20.Fill = false;
+			// Container child hbox4.Gtk.Box+BoxChild
+			this.AccessorLabel = new global::Gtk.Label ();
+			this.AccessorLabel.Name = "AccessorLabel";
+			this.AccessorLabel.Xalign = 1F;
+			this.AccessorLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Code Generation");
+			this.hbox4.Add (this.AccessorLabel);
+			global::Gtk.Box.BoxChild w21 = ((global::Gtk.Box.BoxChild)(this.hbox4 [this.AccessorLabel]));
+			w21.Position = 2;
+			// Container child hbox4.Gtk.Box+BoxChild
+			this.CodeGenCombo = global::Gtk.ComboBox.NewText ();
+			this.CodeGenCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No Generation"));
+			this.CodeGenCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Internal Class"));
+			this.CodeGenCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Public Class"));
+			this.CodeGenCombo.Name = "CodeGenCombo";
+			this.CodeGenCombo.Active = 0;
+			this.hbox4.Add (this.CodeGenCombo);
+			global::Gtk.Box.BoxChild w22 = ((global::Gtk.Box.BoxChild)(this.hbox4 [this.CodeGenCombo]));
+			w22.Position = 3;
+			w22.Expand = false;
+			w22.Fill = false;
+			this.vbox1.Add (this.hbox4);
+			global::Gtk.Box.BoxChild w23 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.hbox4]));
+			w23.Position = 0;
+			w23.Expand = false;
+			w23.Fill = false;
+			// Container child vbox1.Gtk.Box+BoxChild
 			this.pagesNotebook = new global::Gtk.Notebook ();
 			this.pagesNotebook.CanFocus = true;
 			this.pagesNotebook.Name = "pagesNotebook";
-			this.pagesNotebook.CurrentPage = 0;
+			this.pagesNotebook.CurrentPage = 1;
 			this.pagesNotebook.ShowBorder = false;
 			this.pagesNotebook.ShowTabs = false;
 			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
@@ -79,10 +189,10 @@ namespace MonoDevelop.NETResources
 			this.FilterLabel.Name = "FilterLabel";
 			this.FilterLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Filter:");
 			this.hbox1.Add (this.FilterLabel);
-			global::Gtk.Box.BoxChild w3 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.FilterLabel]));
-			w3.Position = 0;
-			w3.Expand = false;
-			w3.Fill = false;
+			global::Gtk.Box.BoxChild w24 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.FilterLabel]));
+			w24.Position = 0;
+			w24.Expand = false;
+			w24.Fill = false;
 			// Container child hbox1.Gtk.Box+BoxChild
 			this.filterSearchEntry = new global::MonoDevelop.Components.SearchEntry ();
 			this.filterSearchEntry.Name = "filterSearchEntry";
@@ -92,13 +202,13 @@ namespace MonoDevelop.NETResources
 			this.filterSearchEntry.Ready = false;
 			this.filterSearchEntry.HasFocus = false;
 			this.hbox1.Add (this.filterSearchEntry);
-			global::Gtk.Box.BoxChild w4 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.filterSearchEntry]));
-			w4.Position = 1;
+			global::Gtk.Box.BoxChild w25 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.filterSearchEntry]));
+			w25.Position = 1;
 			this.vbox2.Add (this.hbox1);
-			global::Gtk.Box.BoxChild w5 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox1]));
-			w5.Position = 0;
-			w5.Expand = false;
-			w5.Fill = false;
+			global::Gtk.Box.BoxChild w26 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox1]));
+			w26.Position = 0;
+			w26.Expand = false;
+			w26.Fill = false;
 			// Container child vbox2.Gtk.Box+BoxChild
 			this.entriesScrolledWindow = new global::Gtk.ScrolledWindow ();
 			this.entriesScrolledWindow.CanFocus = true;
@@ -110,16 +220,16 @@ namespace MonoDevelop.NETResources
 			this.entriesTV.Name = "entriesTV";
 			this.entriesScrolledWindow.Add (this.entriesTV);
 			this.vbox2.Add (this.entriesScrolledWindow);
-			global::Gtk.Box.BoxChild w7 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
-			w7.Position = 1;
+			global::Gtk.Box.BoxChild w28 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
+			w28.Position = 1;
 			this.pagesNotebook.Add (this.vbox2);
 			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
 			this.objectIconWidget = new global::MonoDevelop.NETResources.ResXObjectIconWidget ();
 			this.objectIconWidget.Events = ((global::Gdk.EventMask)(256));
 			this.objectIconWidget.Name = "objectIconWidget";
 			this.pagesNotebook.Add (this.objectIconWidget);
-			global::Gtk.Notebook.NotebookChild w9 = ((global::Gtk.Notebook.NotebookChild)(this.pagesNotebook [this.objectIconWidget]));
-			w9.Position = 1;
+			global::Gtk.Notebook.NotebookChild w30 = ((global::Gtk.Notebook.NotebookChild)(this.pagesNotebook [this.objectIconWidget]));
+			w30.Position = 1;
 			// Notebook tab
 			this.label4 = new global::Gtk.Label ();
 			this.label4.Name = "label4";
@@ -127,74 +237,40 @@ namespace MonoDevelop.NETResources
 			this.pagesNotebook.SetTabLabel (this.objectIconWidget, this.label4);
 			this.label4.ShowAll ();
 			this.vbox1.Add (this.pagesNotebook);
-			global::Gtk.Box.BoxChild w10 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.pagesNotebook]));
-			w10.Position = 0;
+			global::Gtk.Box.BoxChild w31 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.pagesNotebook]));
+			w31.Position = 1;
 			// Container child vbox1.Gtk.Box+BoxChild
-			this.hbox2 = new global::Gtk.HBox ();
-			this.hbox2.Name = "hbox2";
-			this.hbox2.Spacing = 6;
-			// Container child hbox2.Gtk.Box+BoxChild
-			this.UIManager.AddUiFromString ("<ui><toolbar name='pagesToolBar'><toolitem name='StringResourcesAction1' action='StringResourcesAction1'/><toolitem name='OtherResourcesAction' action='OtherResourcesAction'/></toolbar></ui>");
-			this.pagesToolBar = ((global::Gtk.Toolbar)(this.UIManager.GetWidget ("/pagesToolBar")));
-			this.pagesToolBar.Name = "pagesToolBar";
-			this.pagesToolBar.ShowArrow = false;
-			this.hbox2.Add (this.pagesToolBar);
-			global::Gtk.Box.BoxChild w11 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.pagesToolBar]));
-			w11.Position = 0;
-			// Container child hbox2.Gtk.Box+BoxChild
-			this.CreateClassLabel = new global::Gtk.Label ();
-			this.CreateClassLabel.Name = "CreateClassLabel";
-			this.CreateClassLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Create Class");
-			this.hbox2.Add (this.CreateClassLabel);
-			global::Gtk.Box.BoxChild w12 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.CreateClassLabel]));
-			w12.Position = 1;
-			w12.Expand = false;
-			w12.Fill = false;
-			// Container child hbox2.Gtk.Box+BoxChild
-			this.StronglyTypedCombo = global::Gtk.ComboBox.NewText ();
-			this.StronglyTypedCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Yes"));
-			this.StronglyTypedCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No"));
-			this.StronglyTypedCombo.Name = "StronglyTypedCombo";
-			this.hbox2.Add (this.StronglyTypedCombo);
-			global::Gtk.Box.BoxChild w13 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.StronglyTypedCombo]));
-			w13.Position = 2;
-			w13.Expand = false;
-			w13.Fill = false;
-			// Container child hbox2.Gtk.Box+BoxChild
-			this.AccessorCombo = global::Gtk.ComboBox.NewText ();
-			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No Generation"));
-			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Internal"));
-			this.AccessorCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Public"));
-			this.AccessorCombo.Name = "AccessorCombo";
-			this.hbox2.Add (this.AccessorCombo);
-			global::Gtk.Box.BoxChild w14 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.AccessorCombo]));
-			w14.PackType = ((global::Gtk.PackType)(1));
-			w14.Position = 3;
-			w14.Expand = false;
-			w14.Fill = false;
-			// Container child hbox2.Gtk.Box+BoxChild
-			this.AccessorLabel = new global::Gtk.Label ();
-			this.AccessorLabel.Name = "AccessorLabel";
-			this.AccessorLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Accessor");
-			this.hbox2.Add (this.AccessorLabel);
-			global::Gtk.Box.BoxChild w15 = ((global::Gtk.Box.BoxChild)(this.hbox2 [this.AccessorLabel]));
-			w15.PackType = ((global::Gtk.PackType)(1));
-			w15.Position = 4;
-			w15.Expand = false;
-			w15.Fill = false;
-			this.vbox1.Add (this.hbox2);
-			global::Gtk.Box.BoxChild w16 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.hbox2]));
-			w16.Position = 1;
-			w16.Expand = false;
-			w16.Fill = false;
+			this.hbox3 = new global::Gtk.HBox ();
+			this.hbox3.Name = "hbox3";
+			this.hbox3.Spacing = 6;
+			// Container child hbox3.Gtk.Box+BoxChild
+			this.UIManager.AddUiFromString ("<ui><toolbar name='selectorTB'><toolitem name='StringsAction' action='StringsAction'/><toolitem name='ImagesAction' action='ImagesAction'/><toolitem name='IconsAction' action='IconsAction'/><toolitem name='AudioAction' action='AudioAction'/><toolitem name='OtherFilesAction' action='OtherFilesAction'/><toolitem name='OtherEmbeddedAction' action='OtherEmbeddedAction'/></toolbar></ui>");
+			this.selectorTB = ((global::Gtk.Toolbar)(this.UIManager.GetWidget ("/selectorTB")));
+			this.selectorTB.Name = "selectorTB";
+			this.selectorTB.ShowArrow = false;
+			this.hbox3.Add (this.selectorTB);
+			global::Gtk.Box.BoxChild w32 = ((global::Gtk.Box.BoxChild)(this.hbox3 [this.selectorTB]));
+			w32.Position = 0;
+			this.vbox1.Add (this.hbox3);
+			global::Gtk.Box.BoxChild w33 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.hbox3]));
+			w33.Position = 2;
+			w33.Expand = false;
+			w33.Fill = false;
 			this.Add (this.vbox1);
 			if ((this.Child != null)) {
 				this.Child.ShowAll ();
 			}
 			w1.SetUiManager (UIManager);
 			this.Show ();
-			this.StringResourcesAction1.Activated += new global::System.EventHandler (this.OnStringResourcesActivated);
-			this.OtherResourcesAction.Activated += new global::System.EventHandler (this.OnOtherResourcesActivated);
+			this.StringsAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
+			this.ImagesAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
+			this.IconsAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
+			this.AudioAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
+			this.OtherFilesAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
+			this.OtherEmbeddedAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
+			this.AddBtn.Clicked += new global::System.EventHandler (this.OnAddBtnClick);
+			this.DeleteBtn.Clicked += new global::System.EventHandler (this.OnDeleteBtnClick);
+			this.CodeGenCombo.Changed += new global::System.EventHandler (this.OnCodeGenComboChanged);
 		}
 	}
 }

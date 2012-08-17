@@ -10,6 +10,8 @@
     <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.GtkCore/libstetic.dll" />
     <widget-library name="../bin/Debug/NETResources.dll" internal="true" />
     <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.DesignerSupport/MonoDevelop.DesignerSupport.dll" />
+    <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.AspNet/MonoDevelop.AspNet.dll" />
+    <widget-library name="../../../../monodevelop/main/build/AddIns/MonoDevelop.AspNet.Mvc/MonoDevelop.AspNet.Mvc.dll" />
   </import>
   <widget class="Gtk.Bin" id="MonoDevelop.NETResources.ResXEditorWidget" design-size="795 610">
     <action-group name="Default">
@@ -25,29 +27,77 @@
         <property name="Label" translatable="yes">Other Resources</property>
         <property name="ShortLabel" translatable="yes">Other Resources</property>
       </action>
-      <action id="StringResourcesAction1">
+      <action id="StringsAction">
         <property name="Type">Radio</property>
         <property name="HideIfEmpty">False</property>
         <property name="IsImportant">True</property>
-        <property name="Label" translatable="yes">String Resources</property>
-        <property name="ShortLabel" translatable="yes">String Resources</property>
+        <property name="Label" translatable="yes">Strings</property>
+        <property name="ShortLabel" translatable="yes">Strings</property>
         <property name="DrawAsRadio">False</property>
         <property name="Active">False</property>
         <property name="Value">0</property>
         <property name="Group">group1</property>
-        <signal name="Activated" handler="OnStringResourcesActivated" />
+        <signal name="Activated" handler="OnSelectorTBActionActivated" />
       </action>
-      <action id="OtherResourcesAction">
+      <action id="ImagesAction">
         <property name="Type">Radio</property>
         <property name="HideIfEmpty">False</property>
         <property name="IsImportant">True</property>
-        <property name="Label" translatable="yes">Other Resources</property>
-        <property name="ShortLabel" translatable="yes">Other Resources</property>
+        <property name="Label" translatable="yes">Images</property>
+        <property name="ShortLabel" translatable="yes">Images</property>
         <property name="DrawAsRadio">False</property>
         <property name="Active">False</property>
         <property name="Value">0</property>
         <property name="Group">group1</property>
-        <signal name="Activated" handler="OnOtherResourcesActivated" />
+        <signal name="Activated" handler="OnSelectorTBActionActivated" />
+      </action>
+      <action id="IconsAction">
+        <property name="Type">Radio</property>
+        <property name="HideIfEmpty">False</property>
+        <property name="IsImportant">True</property>
+        <property name="Label" translatable="yes">Icons</property>
+        <property name="ShortLabel" translatable="yes">Icons</property>
+        <property name="DrawAsRadio">False</property>
+        <property name="Active">False</property>
+        <property name="Value">0</property>
+        <property name="Group">group1</property>
+        <signal name="Activated" handler="OnSelectorTBActionActivated" />
+      </action>
+      <action id="AudioAction">
+        <property name="Type">Radio</property>
+        <property name="HideIfEmpty">False</property>
+        <property name="IsImportant">True</property>
+        <property name="Label" translatable="yes">Audio</property>
+        <property name="ShortLabel" translatable="yes">Audio</property>
+        <property name="DrawAsRadio">False</property>
+        <property name="Active">False</property>
+        <property name="Value">0</property>
+        <property name="Group">group1</property>
+        <signal name="Activated" handler="OnSelectorTBActionActivated" />
+      </action>
+      <action id="OtherFilesAction">
+        <property name="Type">Radio</property>
+        <property name="HideIfEmpty">False</property>
+        <property name="IsImportant">True</property>
+        <property name="Label" translatable="yes">Other Files</property>
+        <property name="ShortLabel" translatable="yes">Other Files</property>
+        <property name="DrawAsRadio">False</property>
+        <property name="Active">False</property>
+        <property name="Value">0</property>
+        <property name="Group">group1</property>
+        <signal name="Activated" handler="OnSelectorTBActionActivated" />
+      </action>
+      <action id="OtherEmbeddedAction">
+        <property name="Type">Radio</property>
+        <property name="HideIfEmpty">False</property>
+        <property name="IsImportant">True</property>
+        <property name="Label" translatable="yes">Other Embedded</property>
+        <property name="ShortLabel" translatable="yes">Other Embedded</property>
+        <property name="DrawAsRadio">False</property>
+        <property name="Active">False</property>
+        <property name="Value">0</property>
+        <property name="Group">group1</property>
+        <signal name="Activated" handler="OnSelectorTBActionActivated" />
       </action>
     </action-group>
     <property name="MemberName" />
@@ -56,10 +106,84 @@
         <property name="MemberName" />
         <property name="Spacing">6</property>
         <child>
+          <widget class="Gtk.HBox" id="hbox4">
+            <property name="MemberName" />
+            <property name="Spacing">6</property>
+            <child>
+              <widget class="Gtk.Button" id="AddBtn">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Type">TextAndIcon</property>
+                <property name="Icon">stock:gtk-add Menu</property>
+                <property name="Label" translatable="yes">_Add Resource</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnAddBtnClick" />
+              </widget>
+              <packing>
+                <property name="Position">0</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.Button" id="DeleteBtn">
+                <property name="MemberName" />
+                <property name="CanFocus">True</property>
+                <property name="Type">TextAndIcon</property>
+                <property name="Icon">stock:gtk-delete Menu</property>
+                <property name="Label" translatable="yes">_Delete Resource</property>
+                <property name="UseUnderline">True</property>
+                <signal name="Clicked" handler="OnDeleteBtnClick" />
+              </widget>
+              <packing>
+                <property name="Position">1</property>
+                <property name="AutoSize">True</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.Label" id="AccessorLabel">
+                <property name="MemberName" />
+                <property name="Xalign">1</property>
+                <property name="LabelProp" translatable="yes">Code Generation</property>
+              </widget>
+              <packing>
+                <property name="Position">2</property>
+                <property name="AutoSize">False</property>
+              </packing>
+            </child>
+            <child>
+              <widget class="Gtk.ComboBox" id="CodeGenCombo">
+                <property name="MemberName" />
+                <property name="IsTextCombo">True</property>
+                <property name="Items" translatable="yes">No Generation
+Internal Class
+Public Class</property>
+                <property name="Active">0</property>
+                <signal name="Changed" handler="OnCodeGenComboChanged" />
+              </widget>
+              <packing>
+                <property name="Position">3</property>
+                <property name="AutoSize">False</property>
+                <property name="Expand">False</property>
+                <property name="Fill">False</property>
+              </packing>
+            </child>
+          </widget>
+          <packing>
+            <property name="Position">0</property>
+            <property name="AutoSize">True</property>
+            <property name="Expand">False</property>
+            <property name="Fill">False</property>
+          </packing>
+        </child>
+        <child>
           <widget class="Gtk.Notebook" id="pagesNotebook">
             <property name="MemberName" />
             <property name="CanFocus">True</property>
-            <property name="CurrentPage">0</property>
+            <property name="CurrentPage">1</property>
             <property name="ShowBorder">False</property>
             <property name="ShowTabs">False</property>
             <child>
@@ -146,21 +270,25 @@
             </child>
           </widget>
           <packing>
-            <property name="Position">0</property>
+            <property name="Position">1</property>
             <property name="AutoSize">True</property>
           </packing>
         </child>
         <child>
-          <widget class="Gtk.HBox" id="hbox2">
+          <widget class="Gtk.HBox" id="hbox3">
             <property name="MemberName" />
             <property name="Spacing">6</property>
             <child>
-              <widget class="Gtk.Toolbar" id="pagesToolBar">
+              <widget class="Gtk.Toolbar" id="selectorTB">
                 <property name="MemberName" />
                 <property name="ShowArrow">False</property>
-                <node name="pagesToolBar" type="Toolbar">
-                  <node type="Toolitem" action="StringResourcesAction1" />
-                  <node type="Toolitem" action="OtherResourcesAction" />
+                <node name="selectorTB" type="Toolbar">
+                  <node type="Toolitem" action="StringsAction" />
+                  <node type="Toolitem" action="ImagesAction" />
+                  <node type="Toolitem" action="IconsAction" />
+                  <node type="Toolitem" action="AudioAction" />
+                  <node type="Toolitem" action="OtherFilesAction" />
+                  <node type="Toolitem" action="OtherEmbeddedAction" />
                 </node>
               </widget>
               <packing>
@@ -169,63 +297,14 @@
               </packing>
             </child>
             <child>
-              <widget class="Gtk.Label" id="CreateClassLabel">
-                <property name="MemberName" />
-                <property name="LabelProp" translatable="yes">Create Class</property>
-              </widget>
-              <packing>
-                <property name="Position">1</property>
-                <property name="AutoSize">True</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
-              </packing>
+              <placeholder />
             </child>
             <child>
-              <widget class="Gtk.ComboBox" id="StronglyTypedCombo">
-                <property name="MemberName" />
-                <property name="IsTextCombo">True</property>
-                <property name="Items" translatable="yes">Yes
-No</property>
-              </widget>
-              <packing>
-                <property name="Position">2</property>
-                <property name="AutoSize">False</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="Gtk.ComboBox" id="AccessorCombo">
-                <property name="MemberName" />
-                <property name="IsTextCombo">True</property>
-                <property name="Items" translatable="yes">No Generation
-Internal
-Public</property>
-              </widget>
-              <packing>
-                <property name="PackType">End</property>
-                <property name="Position">3</property>
-                <property name="AutoSize">True</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
-              </packing>
-            </child>
-            <child>
-              <widget class="Gtk.Label" id="AccessorLabel">
-                <property name="MemberName" />
-                <property name="LabelProp" translatable="yes">Accessor</property>
-              </widget>
-              <packing>
-                <property name="PackType">End</property>
-                <property name="Position">4</property>
-                <property name="AutoSize">True</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
-              </packing>
+              <placeholder />
             </child>
           </widget>
           <packing>
-            <property name="Position">1</property>
+            <property name="Position">2</property>
             <property name="AutoSize">True</property>
             <property name="Expand">False</property>
             <property name="Fill">False</property>
@@ -255,48 +334,13 @@ Public</property>
         <property name="MemberName" />
         <property name="Spacing">6</property>
         <child>
-          <widget class="Gtk.HBox" id="hbox1">
-            <property name="MemberName" />
-            <property name="Spacing">6</property>
-            <child>
-              <widget class="Gtk.Button" id="AddResourceBtn">
-                <property name="MemberName" />
-                <property name="CanFocus">True</property>
-                <property name="Type">TextAndIcon</property>
-                <property name="Icon">stock:gtk-add Menu</property>
-                <property name="Label" translatable="yes">_Add Resource</property>
-                <property name="UseUnderline">True</property>
-                <signal name="Clicked" handler="OnAddResourceClicked" />
-              </widget>
-              <packing>
-                <property name="Position">0</property>
-                <property name="AutoSize">True</property>
-                <property name="Expand">False</property>
-                <property name="Fill">False</property>
-              </packing>
-            </child>
-            <child>
-              <placeholder />
-            </child>
-            <child>
-              <placeholder />
-            </child>
-          </widget>
-          <packing>
-            <property name="Position">0</property>
-            <property name="AutoSize">True</property>
-            <property name="Expand">False</property>
-            <property name="Fill">False</property>
-          </packing>
-        </child>
-        <child>
           <widget class="Gtk.IconView" id="entriesIV">
             <property name="MemberName" />
             <property name="CanFocus">True</property>
             <property name="ItemWidth">100</property>
           </widget>
           <packing>
-            <property name="Position">1</property>
+            <property name="Position">0</property>
             <property name="AutoSize">True</property>
           </packing>
         </child>
