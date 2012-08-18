@@ -25,8 +25,6 @@ namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
 	public partial class ResXEditorWidget : Gtk.Bin {
 
-		static List<ResXEditorWidget> widgets = new List<ResXEditorWidget> (); 
-
 		StringEditorOptions options;
 
 		ListStore store;
@@ -41,7 +39,6 @@ namespace MonoDevelop.NETResources {
 				UpdateFromCatalog ();
 				UpdateProgressBar ();
 				SetupCodeGenCombo ();
-				//objectIconWidget.Catalog = catalog;
 			}
 		}
 
@@ -161,8 +158,7 @@ namespace MonoDevelop.NETResources {
 				// warn user about incompatible tools
 				if (CodeGenCombo.Active != 0) {
 					string msg = "The code gen tool currently selected for this file does not support it"
-							+ " as the file is not marked an embedded resource, deselect the tool?\n"
-							+ "(Beware the previously generated code file may not work)";
+							+ " as the file is not marked an embedded resource, deselect the tool?";
 					bool yes = MessageService.Confirm (pf.FilePath.ToRelative (pf.Project.BaseDirectory).ToString (),
 					                                   GettextCatalog.GetString (msg),AlertButton.Yes);
 					if (yes) {

@@ -134,5 +134,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="CustomTools\" />
+    <Folder Include="Templates\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Templates\ResXResourceFile.xft.xml" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 <Addin	id		= "NETResources"
 	namespace	= "MonoDevelop"
 	name		= ".NET Resource Editor"
-	author		= "Gary B"
+	author		= "Gary Barnett"
 	copyright	= "MIT X11"
 	description	= "Addin to allow editing of .NET resource files"
 	category	= "IDE extensions"
@@ -12,7 +12,7 @@
 		<Addin id="Ide" version="3.1.0" />
 	</Dependencies>
         
-        <!-- ?? Icons "/MonoDevelop/Core/StockIcons" -->
+        <!-- <Extension path="/MonoDevelop/Core/StockIcons">	</Extension> -->
         
         <!-- ?? Templates "/MonoDevelop/Ide/FileTemplates"-->
 	
@@ -24,12 +24,12 @@
 		</MimeType>
 	</Extension>
 	
-	<Extension path="/MonoDevelop/Ide/FileFilters">
-		<FileFilter id="ResX" insertbefore="AllFiles" _label="Resx Files" extensions="*.resx" />
-	</Extension>
-	
 	<Extension path = "/MonoDevelop/Ide/DisplayBindings">
 		<DisplayBinding id = "ResXEditor" insertbefore ="DefaultDisplayBinding" class = "MonoDevelop.NETResources.ResXEditorDisplayBinding"/>
+	</Extension>
+	
+	<Extension path="/MonoDevelop/Ide/FileTemplates">
+		<FileTemplate id="ResXResourceFile" file="Templates/ResXResourceFile.xft.xml"/>
 	</Extension>
 	
 	<Extension path = "/MonoDevelop/Ide/CustomTools">

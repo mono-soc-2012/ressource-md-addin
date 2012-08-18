@@ -44,6 +44,8 @@ namespace MonoDevelop.NETResources {
 
 		public int MaxRelativeXPos {
 			get {
+				if (entriesList.Count == 0)
+					return 0;
 				return entriesList.Max (e=> e.RelativePos.X);
 			}
 		}
@@ -70,13 +72,13 @@ namespace MonoDevelop.NETResources {
 
 		public bool ContainsName (string name)
 		{
-			return entriesList.Any (e => e.Name == name);
+			return entriesList.Any (e => e.Name.ToLower () == name.ToLower ());
 		}
 
 		public bool IsUniqueName (string oldName, string newName, bool IsNew)
 		{
 			if (IsNew || (!IsNew && (oldName != newName)))
-				return !entriesList.Any (e=> e.Name == newName);
+				return !entriesList.Any (e=> e.Name.ToLower () == newName.ToLower ());
 			else
 				return true;
 		}
@@ -88,7 +90,7 @@ namespace MonoDevelop.NETResources {
 			do {
 				i++;
 				tempName = "String" + i;
-			} while (entriesList.Any (e=> e.Name == tempName));
+			} while (ContainsName (tempName));
 
 			return tempName;
 		}
@@ -163,7 +165,8 @@ namespace MonoDevelop.NETResources {
 				tempCat.Load (null, baseFilePath);
 				BaseCatalog = tempCat;
 			} catch (Exception ex) {
-				//FIXME: log
+				LoggingService.LogError ("Unhandled error loading base catalog {0} for resx file {1} : {2}", 
+				                         baseFilePath, fileName ,ex);
 				BaseCatalog = null;
 			}
 
@@ -238,6 +241,7 @@ namespace MonoDevelop.NETResources {
 			// FIXME: will write metadata resources as normal resources
 			using (sw) {
 				using (var rw = new ResXResourceWriter (sw)) {
+					rw.BasePath = Path.GetDirectoryName (fileName); // fileRefs relative to resx dir
 					foreach (var res in entriesList.OrderBy (e=> e.RelativePos.X).ThenBy (e=> e.RelativePos.Y)) {
 						rw.AddResource (res.Node);
 					}

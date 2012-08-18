@@ -1,19 +1,14 @@
 ﻿<Properties GitUserInfo="UsingMD">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/ResXEditorWidget.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="NETResources/NETResources.addin.xml">
     <Files>
-      <File FileName="NETResources/ResXObjectIconWidget.cs" Line="22" Column="3" />
-      <File FileName="NETResources/NETResources.addin.xml" Line="34" Column="2" />
-      <File FileName="NETResources/CustomTools/ThreadAsyncOperation.cs" Line="26" Column="1" />
-      <File FileName="NETResources/ResXEditorWidget.cs" Line="186" Column="3" />
-      <File FileName="NETResources/ResXEditorView.cs" Line="93" Column="9" />
+      <File FileName="NETResources/NETResources.addin.xml" Line="26" Column="2" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="NETResources" expanded="True">
-            <Node name="CustomTools" expanded="True" />
-            <Node name="ResXEditorWidget.cs" selected="True" />
+            <Node name="NETResources.addin.xml" selected="True" />
           </Node>
         </State>
       </Pad>
