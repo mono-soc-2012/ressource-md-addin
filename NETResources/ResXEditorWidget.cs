@@ -238,7 +238,9 @@ namespace MonoDevelop.NETResources {
 		                        TreeModel tree_model, TreeIter iter) 
 		{
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
-			((CellRendererText) cell).Text = sre.GetBaseString ();
+			var crText = cell as CellRendererText;
+			crText.Text = sre.GetBaseString ();
+			crText.Style = Pango.Style.Italic;
 		}
 		
 		void valueDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
@@ -252,7 +254,19 @@ namespace MonoDevelop.NETResources {
 		                      TreeModel tree_model, TreeIter iter) 
 		{
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
-			((CellRendererText) cell).Text = sre.Comment;
+			var crText = cell as CellRendererText;
+
+			var se = sre as StringEntry;
+
+			if (se != null && se.IsMeta) {
+				crText.Text = "Metadata Resource";
+				crText.Editable = false;
+				crText.Style = Pango.Style.Italic;
+			} else {
+				crText.Style = Pango.Style.Normal;
+				crText.Editable = true;
+				crText.Text = sre.Comment;
+			}
 		}
 
 		TreeViewColumn GetEntriesTreeViewColumn (string title, int sortColumnId, TreeCellDataFunc treeCellDataFunc)
@@ -320,7 +334,7 @@ namespace MonoDevelop.NETResources {
 				return;
 			var resEntry = entry as ResourceEntry;
 			if (resEntry == null)
-				return; // FIXME: if its InserterRow should clear its values?
+				return;
 
 			Gtk.Menu contextMenu = CreateContextMenu (RemoveEntry, resEntry);
 			if (contextMenu != null)

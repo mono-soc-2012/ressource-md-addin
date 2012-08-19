@@ -71,13 +71,13 @@ namespace MonoDevelop.NETResources
 			this.AudioAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Audio");
 			w2.Add (this.AudioAction, null);
 			this.OtherFilesAction = new global::Gtk.RadioAction ("OtherFilesAction", global::Mono.Unix.Catalog.GetString ("Other Files"), null, null, 0);
-			this.OtherFilesAction.Group = this.AudioAction.Group;
+			this.OtherFilesAction.Group = this.StringsAction.Group;
 			this.OtherFilesAction.HideIfEmpty = false;
 			this.OtherFilesAction.IsImportant = true;
 			this.OtherFilesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Files");
 			w2.Add (this.OtherFilesAction, null);
 			this.OtherEmbeddedAction = new global::Gtk.RadioAction ("OtherEmbeddedAction", global::Mono.Unix.Catalog.GetString ("Other Embedded"), null, null, 0);
-			this.OtherEmbeddedAction.Group = this.AudioAction.Group;
+			this.OtherEmbeddedAction.Group = this.StringsAction.Group;
 			this.OtherEmbeddedAction.HideIfEmpty = false;
 			this.OtherEmbeddedAction.IsImportant = true;
 			this.OtherEmbeddedAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Embedded");

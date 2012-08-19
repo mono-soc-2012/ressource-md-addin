@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.Runtime.Serialization;
 
 namespace MonoDevelop.NETResources {
 	public class ResourceCatalog : IEnumerable<ResourceEntry> {
@@ -179,12 +180,31 @@ namespace MonoDevelop.NETResources {
 			GetBaseCatalog ();
 
 			try {
+				/* we need to get the resources as ResXDataNodes to access comment and file info
+				 * this returns both data and metadata elements without any distinction between them
+				 * thus have to run GetMetadataEnumerator (keeping UseResXDataNodes false as default) to
+				 * get a list of meta data keys first
+				 */ 
+				// FIXME: GetMetadataEnumerator throws exceptions if referenced file is missing, and probably 
+				// other occasions as it tries to instantiate everything in the file
+				var meta_keys = new List<string> ();
+				try { 
+				using (var reader = new ResXResourceReader (resxFile)) {
+					reader.BasePath = Path.GetDirectoryName (resxFile);
+					var enumerator = reader.GetMetadataEnumerator ();
+					while (enumerator.MoveNext ())
+						meta_keys.Add (((DictionaryEntry) enumerator.Current).Key as string);
+				}
+				} catch {
+					//carry on for now, risking some metadata resources being saved back as data resources
+				}
+
 				using (var reader = new ResXResourceReader (resxFile)) {
 					reader.UseResXDataNodes = true;
 					reader.BasePath = Path.GetDirectoryName (resxFile);
 					foreach (DictionaryEntry de in reader) {
 						var node = (ResXDataNode) de.Value;
-						bool isMeta = false; //FIXME: implement isMeta check
+						bool isMeta = meta_keys.Contains (node.Name);
 						string typeName = node.GetValueTypeName (new AssemblyName [0]);
 						// ignore assembly versions
 						if (typeName.StartsWith ("System.Drawing.Icon, System.Drawing"))
@@ -219,13 +239,13 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
+		// tried a tidier version of this using a stringwriter but limited the encoding of xml output to utf-16
 		public bool Save (string newFileName)
 		{
-			StreamWriter sw;
+			// get a temp file in same directory as newFileName for safe write
 			int fileCounter = 0;
 			string tempFileName = "";
-			
-			// get a temp file in same directory as newFileName for safe write
+			StreamWriter sw;
 			try {
 				do  {
 					fileCounter++;
@@ -234,36 +254,56 @@ namespace MonoDevelop.NETResources {
 				sw = new StreamWriter (tempFileName);
 			}
 			catch (Exception ex) {
-				LoggingService.LogError ("Unhandled error creating temp file while saving Gettext catalog '{0}': {1}", tempFileName, ex);
-				return false;
+				LoggingService.LogError ("Unhandled error creating temp file '{0}' while saving resx " +
+							"file : {1}", tempFileName, ex);
+				throw new Exception ("Could not create a temporary file in same directory as target " +
+							"file for save", ex);
 			}
 			// write out resources
-			// FIXME: will write metadata resources as normal resources
-			using (sw) {
-				using (var rw = new ResXResourceWriter (sw)) {
-					rw.BasePath = Path.GetDirectoryName (fileName); // fileRefs relative to resx dir
-					foreach (var res in entriesList.OrderBy (e=> e.RelativePos.X).ThenBy (e=> e.RelativePos.Y)) {
-						rw.AddResource (res.Node);
+			using (var rw = new ResXResourceWriter (sw)) {
+				rw.BasePath = Path.GetDirectoryName (newFileName); // make fileRefs relative to new resx dir
+				foreach (var res in entriesList.OrderBy (e=> e.RelativePos.X).ThenBy (e=> e.RelativePos.Y)) {
+					if (res.IsMeta) {
+						/* since AddMetadata does not have an overload accepting a ResXDataNode 
+						 * the resource needs to be instantiated. This will fail for unresolvable 
+						 * types with TypeLoadException or ArgumentException
+						 */ 
+						try {
+							rw.AddMetadata (res.Node.Name, res.GetValue ()); // no comment stored
+						} catch (Exception ex) {
+							LoggingService.LogError ("Unhandled error adding metadata " +
+										"resource while saving resx file '{0}'" +
+										": {1}", newFileName, ex);
+							File.Delete (tempFileName);
+							throw new Exception ("Could not add metadata resource named '" +
+							                     res.Name + "'\nNote: only types resolvable " + 
+							                     "by monodevelop are currently supported as " +
+							                     "metadata resources", ex);
+						}
+					} else {
+						try { 
+							rw.AddResource (res.Node); 
+						} catch (Exception ex) { //unlikely to get error here
+							LoggingService.LogError ("Unhandled error adding data " +
+							                         "resource while saving resx file '{0}'" +
+							                         ": {1}", newFileName, ex);
+							File.Delete (tempFileName); 
+							throw ex;
+						}
 					}
 				}
 			}
 			//try to replace original file
-			bool saved = false;
 			try {
 				File.Copy (tempFileName, newFileName, true);
-				saved = true;
 			}
 			catch (Exception ex){
 				LoggingService.LogError ("Unhandled error saving ResX File to '{0}': {1}", newFileName, ex);
-				saved = false;
-			}	
-			finally {
 				File.Delete(tempFileName);
-			}
-			
-			if (!saved)
-				return false;
-						
+				throw new Exception ("Could not copy from temp file to the target save file", ex);
+			}	
+
+			File.Delete(tempFileName);
 			fileName = newFileName;
 			IsDirty = false;
 			return true;

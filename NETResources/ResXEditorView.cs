@@ -43,9 +43,14 @@ namespace MonoDevelop.NETResources {
 		public override void Save (string fileName)
 		{
 			OnBeforeSave (EventArgs.Empty);
-			catalog.Save (fileName);
-			ContentName = fileName;
-			IsDirty = false;
+
+			try {
+				catalog.Save (fileName); //not checking return value as throwing exceptions on errors
+				ContentName = fileName;
+				IsDirty = false;
+			} catch (Exception ex) {
+				MessageService.ShowException (ex, ex.Message, "The file could not be saved");
+			}
 		}
 		
 		public override void Save ()

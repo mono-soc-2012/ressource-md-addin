@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace MonoDevelop.NETResources {
-	public class BinaryOrStringProvider : EntryProvider, ICustomTypeDescriptor {
+	public class BinaryOrStringProvider : EntryProvider {
 		BinaryOrStringEntry BinaryOrStringEntry {
 			get { return (BinaryOrStringEntry) Entry; }
 		}
@@ -55,63 +55,20 @@ namespace MonoDevelop.NETResources {
 			get { return (FileType == FileRefFileType.Text); }
 		}
 
-		#region ICustomTypeDescriptor implementation
-		#region Uses TypeDescriptor methods
-		public AttributeCollection GetAttributes ()
+		public override PropertyDescriptorCollection GetProperties (Attribute [] arr)
 		{
-			return TypeDescriptor.GetAttributes (this, true);
-		}
-		public string GetClassName ()
-		{
-			return TypeDescriptor.GetClassName (this, true);
-		}
-		public string GetComponentName ()
-		{
-			return TypeDescriptor.GetComponentName (this, true);
-		}
-		public TypeConverter GetConverter ()
-		{
-			return TypeDescriptor.GetConverter (this, true);
-		}
-		public EventDescriptor GetDefaultEvent ()
-		{
-			return TypeDescriptor.GetDefaultEvent (this, true);
-		}
-		public PropertyDescriptor GetDefaultProperty ()
-		{
-			return TypeDescriptor.GetDefaultProperty (this, true);
-		}
-		public object GetEditor (Type editorBaseType)
-		{
-			return TypeDescriptor.GetEditor (this, editorBaseType, true);
-		}
-		public EventDescriptorCollection GetEvents ()
-		{
-			return TypeDescriptor.GetEvents (this, true);
-		}
-		public EventDescriptorCollection GetEvents (Attribute[] arr)
-		{
-			return TypeDescriptor.GetEvents (this, arr, true);
-		}
-		#endregion
-		public PropertyDescriptorCollection GetProperties ()
-		{
-			return GetProperties (null);
-		}
-		public PropertyDescriptorCollection GetProperties (Attribute [] arr)
-		{
-			/* Once the selected object is loaded into the property grid it does not support showing
-			 * or hiding properties in response to other properties changing, properties with IsBrowsable.No
-			 * set after first loaded are set to read only mode, and properties that did have IsBrowsable.No
-			 * set on load and now do not remain hidden.
-			 */ 
  			var props = TypeDescriptor.GetProperties (this, arr, true);
 			var propsToUse = new PropertyDescriptorCollection (new PropertyDescriptor [0]);
 			
 			var roAtt = new Attribute [] { ReadOnlyAttribute.Yes };
-			//var hideAtt = new Attribute [] { BrowsableAttribute.No };
+			// FIXME: duplicates code from the base class implementation
 			foreach (PropertyDescriptor prop in props) {
-				if (prop.Name == "TextFileEncoding") {
+				if (prop.Name == "Comment") {
+					if (Entry.IsMeta)
+						propsToUse.Add (new CustomProperty (prop, roAtt));
+					else
+						propsToUse.Add (prop);
+				} else if (prop.Name == "TextFileEncoding") {
 					if (EditEncoding)
 						propsToUse.Add (prop);
 					else
@@ -121,11 +78,7 @@ namespace MonoDevelop.NETResources {
 			}
 			return propsToUse;
 		}
-		public object GetPropertyOwner (PropertyDescriptor pd)
-		{
-			return this;
-		}
-		#endregion
+
 	}
 
 	public enum FileRefFileType {
