@@ -1,7 +1,6 @@
 //
-// PublicResXCodeFileGenerator.cs : Custom Tool creating a public class
-// providing strongly typed access to the resources in a resx file
-// which is embedded in the same assembly as current project
+// OtherFileProvider.cs : Class enabling display of OtherFileEntry 
+// properties in Property Pad
 //
 // Author:
 //  	Gary Barnett (gary.barnett.mono@gmail.com)
@@ -28,29 +27,32 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
 using System;
-using MonoDevelop.Ide.CustomTools;
-using System.Resources.Tools;
-using MonoDevelop.Projects;
-using System.IO;
-using System.CodeDom.Compiler;
-using MonoDevelop.Core;
-using System.Threading;
-using System.CodeDom;
+using System.ComponentModel;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace MonoDevelop.NETResources.CustomTools {
-	public class PublicResXCodeFileGenerator : ISingleFileCustomTool {
-		public PublicResXCodeFileGenerator ()
+namespace MonoDevelop.NETResources {
+	public class OtherFileProvider : EntryProvider {
+		OtherFileEntry OtherFileEntry {
+			get { return (OtherFileEntry) Entry; }
+		}
+		internal OtherFileProvider (OtherFileEntry entry)
 		{
-
+			Entry = entry;
+		}
+		
+		public string FileName {
+			get { return OtherFileEntry.FileName; }
 		}
 
-		public IAsyncOperation Generate (IProgressMonitor monitor, ProjectFile file, SingleFileCustomToolResult result)
-		{
-			return new ThreadAsyncOperation (delegate {
-				ResXCodeFileGenerator.Generate (monitor, file, result, false);
-			}, result);
+		public Encoding TextFileEncoding {
+			get { return OtherFileEntry.TextFileEncoding; }
+		}
+
+		public Persistence Persistence { 
+			get { return Persistence.Linked; }
 		}
 	}
 }

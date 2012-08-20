@@ -1,7 +1,6 @@
 //
-// PublicResXCodeFileGenerator.cs : Custom Tool creating a public class
-// providing strongly typed access to the resources in a resx file
-// which is embedded in the same assembly as current project
+// ResXEditorDisplayBinding.cs : IViewDisplayBinding implementation for 
+// editor
 //
 // Author:
 //  	Gary Barnett (gary.barnett.mono@gmail.com)
@@ -28,30 +27,44 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
 using System;
-using MonoDevelop.Ide.CustomTools;
-using System.Resources.Tools;
-using MonoDevelop.Projects;
 using System.IO;
-using System.CodeDom.Compiler;
 using MonoDevelop.Core;
-using System.Threading;
-using System.CodeDom;
+using MonoDevelop.Ide;
+using MonoDevelop.Ide.Gui;
+using MonoDevelop.Ide.Codons;
+using MonoDevelop.Projects;
 
-namespace MonoDevelop.NETResources.CustomTools {
-	public class PublicResXCodeFileGenerator : ISingleFileCustomTool {
-		public PublicResXCodeFileGenerator ()
-		{
-
+namespace MonoDevelop.NETResources {
+	public class ResXEditorDisplayBinding : IViewDisplayBinding {
+		// FIXME: use GetText
+		public  string Name {
+			get { return GettextCatalog.GetString ("ResX Editor"); }
 		}
 
-		public IAsyncOperation Generate (IProgressMonitor monitor, ProjectFile file, SingleFileCustomToolResult result)
+		public bool CanHandle (FilePath filePath, string mimeType, Project project)
 		{
-			return new ThreadAsyncOperation (delegate {
-				ResXCodeFileGenerator.Generate (monitor, file, result, false);
-			}, result);
+			return filePath.IsNotNull && filePath.HasExtension (".resx");
 		}
-	}
+
+		public IViewContent CreateContent (FilePath filePath, string mimeType, Project project)
+		{
+			/*
+			foreach (TranslationProject tp in IdeApp.Workspace.GetAllSolutionItems<TranslationProject>  ())
+				if (tp.BaseDirectory == Path.GetDirectoryName (filePath))
+					return new Editor.CatalogEditorView (tp, filePath);
+			
+			return new Editor.CatalogEditorView (null, filePath);
+			*/
+
+			return new ResXEditorView (filePath, project);
+		}
+
+		// Whether the display binding can be used as the default handler for the content types
+		// that it handles. If this is false, the binding is only used when the user explicitly picks it.
+		public bool CanUseAsDefault {
+			get { return true; }
+		}
+    }
 }
 

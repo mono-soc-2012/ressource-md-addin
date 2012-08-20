@@ -100,30 +100,30 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="ResXEditorDisplayBinding.cs" />
     <Compile Include="gtk-gui\generated.cs" />
-    <Compile Include="ResXEditorWidget.cs" />
     <Compile Include="gtk-gui\MonoDevelop.NETResources.ResXEditorWidget.cs" />
-    <Compile Include="ResXEditorView.cs" />
-    <Compile Include="ResourceCatalog.cs" />
-    <Compile Include="ResXObjectIconWidget.cs" />
     <Compile Include="gtk-gui\MonoDevelop.NETResources.ResXObjectIconWidget.cs" />
-    <Compile Include="EntryProvider.cs" />
-    <Compile Include="StringEntry.cs" />
-    <Compile Include="OtherEmbeddedEntry.cs" />
-    <Compile Include="OtherFileEntry.cs" />
-    <Compile Include="BinaryOrStringFileEntry.cs" />
-    <Compile Include="PersistenceChangingEntry.cs" />
-    <Compile Include="IconEntry.cs" />
-    <Compile Include="ImageEntry.cs" />
-    <Compile Include="AudioEntry.cs" />
-    <Compile Include="ResourceEntry_1.cs" />
-    <Compile Include="OtherFileProvider2.cs" />
-    <Compile Include="PersistenceChangingProvider.cs" />
-    <Compile Include="BinaryOrStringProvider.cs" />
     <Compile Include="CustomTools\ThreadAsyncOperation.cs" />
     <Compile Include="CustomTools\ResXCodeFileGenerator.cs" />
     <Compile Include="CustomTools\PublicResXCodeFileGenerator.cs" />
+    <Compile Include="Model\BinaryOrStringFileEntry.cs" />
+    <Compile Include="Model\AudioEntry.cs" />
+    <Compile Include="Model\IconEntry.cs" />
+    <Compile Include="Model\ImageEntry.cs" />
+    <Compile Include="Model\OtherFileEntry.cs" />
+    <Compile Include="Model\PersistenceChangingEntry.cs" />
+    <Compile Include="Model\OtherEmbeddedEntry.cs" />
+    <Compile Include="Model\ResourceEntry.cs" />
+    <Compile Include="Model\StringEntry.cs" />
+    <Compile Include="PropertyProviders\BinaryOrStringProvider.cs" />
+    <Compile Include="PropertyProviders\PersistenceChangingProvider.cs" />
+    <Compile Include="PropertyProviders\EntryProvider.cs" />
+    <Compile Include="PropertyProviders\OtherFileProvider.cs" />
+    <Compile Include="Model\ResourceCatalog.cs" />
+    <Compile Include="Gui\ResXEditorDisplayBinding.cs" />
+    <Compile Include="Gui\ResXEditorView.cs" />
+    <Compile Include="Gui\ResXEditorWidget.cs" />
+    <Compile Include="Gui\ResXObjectIconWidget.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -135,6 +135,9 @@
   <ItemGroup>
     <Folder Include="CustomTools\" />
     <Folder Include="Templates\" />
+    <Folder Include="Model\" />
+    <Folder Include="PropertyProviders\" />
+    <Folder Include="Gui\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Templates\ResXResourceFile.xft.xml" />
