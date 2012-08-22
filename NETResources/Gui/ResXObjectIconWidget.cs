@@ -173,7 +173,30 @@ namespace MonoDevelop.NETResources {
 			                     TreeModel tree_model, TreeIter iter)
 		{
 			var re = (ResourceEntry) store.GetValue (iter, 0);
-			((CellRendererPixbuf) cell).Pixbuf = GetIconForType (Type.GetType (re.TypeName));
+			var cellPb = cell as CellRendererPixbuf;
+			Bitmap bmp = null;
+			Gdk.Pixbuf pb = null;
+
+			// Can pass an ico to a PixBuf for display in IconView but throws an error
+			// on vista icons
+			if (re is IconEntry)
+				bmp = ((IconEntry) re).GetThumbnail (48, 48);
+			else if (re is ImageEntry)
+				bmp = ((ImageEntry) re).GetThumbnail (96, 96);
+
+			if (bmp != null) {
+				using (var stream = new MemoryStream ()) {
+					bmp.Save (stream, bmp.RawFormat);
+					stream.Position = 0;
+					pb = new Gdk.Pixbuf (stream);
+				}
+			}
+
+			// get default icon
+			if (pb == null)
+				pb = GetIconForType (Type.GetType (re.TypeName));
+
+			cellPb.Pixbuf = pb;
 		}
 
 		void tooltipHandler (object o, QueryTooltipArgs args)

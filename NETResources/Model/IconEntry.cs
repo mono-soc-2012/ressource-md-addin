@@ -34,7 +34,7 @@ using System.Reflection;
 using System.IO;
 
 namespace MonoDevelop.NETResources {
-	public class IconEntry : PersistenceChangingEntry {
+	public class IconEntry : PersistenceChangingEntry, IThumbnailProvider {
 		public IconEntry (ResourceCatalog _owner, ResXDataNode _node, bool isMeta)
 		{
 			if (_node == null)
@@ -72,7 +72,23 @@ namespace MonoDevelop.NETResources {
 			node = new ResXDataNode (_name, new ResXFileRef (_fileName, typeof (Icon).AssemblyQualifiedName)); // same ver as MD
 			SetRelativePos ();
 		}
-
+		#region IThumbnailProvider implementation
+		Bitmap thumbnail = null;
+		
+		// Note: width and height ignored after first call to method
+		public Bitmap GetThumbnail (int width, int height)
+		{
+			if (thumbnail != null)
+				return thumbnail;
+			
+			var ico = GetValue () as System.Drawing.Icon; // FIXME: error handling?
+			if (ico != null) {
+				var sizedIco = new System.Drawing.Icon (ico, width, height);
+				thumbnail = sizedIco.ToBitmap ();
+			}
+			return thumbnail;
+		}
+		#endregion
 		#region implemented abstract members of PersistenceChangingEntry
 		protected override void SaveFile (string filePath)
 		{
