@@ -34,6 +34,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace MonoDevelop.NETResources {
 	public class BinaryOrStringProvider : EntryProvider {
@@ -46,7 +47,7 @@ namespace MonoDevelop.NETResources {
 		}
 		
 		public string FileName {
-			get { return BinaryOrStringEntry.FileName; }
+			get { return Path.GetFullPath (BinaryOrStringEntry.FileName); }
 		}
 		
 		[System.ComponentModel.TypeConverter (typeof (EncodingConverter))]

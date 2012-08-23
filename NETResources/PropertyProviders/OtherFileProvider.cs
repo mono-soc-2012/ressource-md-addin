@@ -32,6 +32,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace MonoDevelop.NETResources {
 	public class OtherFileProvider : EntryProvider {
@@ -44,7 +45,11 @@ namespace MonoDevelop.NETResources {
 		}
 		
 		public string FileName {
-			get { return OtherFileEntry.FileName; }
+			get { 
+				// ResXFileRef.FileName can be of form c:\dir1\..\file.ext, GetFullPath simplifies it
+				// for display
+				return Path.GetFullPath (OtherFileEntry.FileName); 
+			}
 		}
 
 		public Encoding TextFileEncoding {

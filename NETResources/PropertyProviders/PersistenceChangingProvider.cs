@@ -47,7 +47,12 @@ namespace MonoDevelop.NETResources {
 		}
 		
 		public string FileName {
-			get { return PersistenceChangingEntry.FileName; }
+			get { 
+				if (PersistenceChangingEntry.FileName == null)
+					return null;
+				else
+					return Path.GetFullPath (PersistenceChangingEntry.FileName); 
+			}
 		}
 		
 		public Persistence Persistence {
