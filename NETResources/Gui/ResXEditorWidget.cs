@@ -152,6 +152,8 @@ namespace MonoDevelop.NETResources {
 			entriesTV.Selection.Changed += OnEntrySelected;
 
 			store.SetSortColumnId (0, SortType.Ascending);
+
+			entriesTV.HoverSelection = true;
 		}
 
 		void SetupCodeGenCombo ()
@@ -341,19 +343,55 @@ namespace MonoDevelop.NETResources {
 			cell.Edited += editHandler;
 			return column;
 		}
+		#region Handle Column Resizing
+		//to store column widths to bypass odd autoresizing causes by model reload later
+		struct ColumnWidths {
+			public int Name;
+			public int BaseValue;
+			public int Value;
+			public int Comment;
+			// flag to let columnWidthChanged know it was called in response to restore
+			public bool Restoring; 
+		}
+
+		ColumnWidths columnWidths;
+
+		void StoreColumnWidths ()
+		{
+			columnWidths.Name = entriesTV.Columns [0].Width;
+			columnWidths.BaseValue = entriesTV.Columns [1].Width;
+			columnWidths.Value = entriesTV.Columns [2].Width;
+			columnWidths.Comment = entriesTV.Columns [3].Width;
+		}
+
+		void RestoreColumnWidths ()
+		{
+			// each column width assignment will likely raise columnWidthChanged
+			entriesTV.Columns [0].FixedWidth = columnWidths.Name;
+			entriesTV.Columns [1].FixedWidth = columnWidths.BaseValue;
+			entriesTV.Columns [2].FixedWidth = columnWidths.Value;
+			entriesTV.Columns [3].FixedWidth = columnWidths.Comment;
+		}
 
 		void columnWidthChanged (object sender, GLib.NotifyArgs args)
 		{
-			//FIXME: assumes 1 cell renderer per column and its a ...Text
+			//assumes 1 cell renderer per column and its a ...Text
 			var col = (TreeViewColumn) sender;
 			var crText = (CellRendererText) col.Cells [0];
 			//FIXME: hacky
 			if ((crText.WrapWidth > col.Width -15 && crText.WrapWidth < col.Width - 5) || col.Width < 10)
 				return;
+
 			crText.WrapWidth = col.Width - 10;
-			entriesTV.Model = null; 
-			entriesTV.Model = store; // rows need to be regenerated to have correct heights to display wrapped lines
+			// model needs reset so rows are regenerated to have correct heights to display wrapped 
+			// lines. This has side effect of causing column widths to be regenerated and packed 
+			// inside viewbale window, thus store / restore column widths
+			StoreColumnWidths ();
+			entriesTV.Model = null;
+			entriesTV.Model = store;
+			RestoreColumnWidths ();
 		}
+		#endregion
 
 		void ShowPopup (EventButton evt)
 		{
@@ -463,8 +501,6 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
-		string filter = String.Empty;
-		Regex  regex = new Regex (String.Empty);
 		// called on load and when catalog filtered
 		public void UpdateFromCatalog ()
 		{
