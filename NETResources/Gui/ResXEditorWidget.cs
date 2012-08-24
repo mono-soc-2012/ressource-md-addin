@@ -66,7 +66,8 @@ namespace MonoDevelop.NETResources {
 				catalog = value;
 				UpdateFromCatalog ();
 				UpdateProgressBar ();
-				SetupCodeGenCombo ();
+				SetupCodeGen ();
+				SetupBaseValue ();
 			}
 		}
 
@@ -156,7 +157,7 @@ namespace MonoDevelop.NETResources {
 			entriesTV.HoverSelection = true;
 		}
 
-		void SetupCodeGenCombo ()
+		void SetupCodeGen ()
 		{
 			ProjectFile pf = catalog.ProjectFile;
 
@@ -208,6 +209,17 @@ namespace MonoDevelop.NETResources {
 					return;
 				}
 			}*/
+		}
+
+		void SetupBaseValue ()
+		{
+			if (Catalog.BaseCatalog == null) {
+				BaseValueCombo.InsertText (2,"No base catalog loaded");
+				BaseValueCombo.Active = 2;
+				// combo on change event should now hide base value column in treeview
+				BaseValueCombo.Sensitive = false;
+				return;
+			}
 		}
 
 		//FIXME: duplicate *.designer.cs files present in solution tree until solution reloaded
@@ -765,6 +777,11 @@ namespace MonoDevelop.NETResources {
 			// (could also be "Custom Tool" as added during SetupCodeGenCombo)
 			}
 			pf.Project.Save (null); //FIXME: ok to save here?
+		}
+
+		protected void OnBaseValueComboChanged (object sender, EventArgs e)
+		{
+			entriesTV.Columns [1].Visible = (BaseValueCombo.ActiveText == "Yes");
 		}
 
     }
