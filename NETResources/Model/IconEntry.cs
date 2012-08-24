@@ -80,11 +80,13 @@ namespace MonoDevelop.NETResources {
 		{
 			if (thumbnail != null)
 				return thumbnail;
-			
-			var ico = GetValue () as System.Drawing.Icon; // FIXME: error handling?
-			if (ico != null) {
-				var sizedIco = new System.Drawing.Icon (ico, width, height);
-				thumbnail = sizedIco.ToBitmap ();
+			try {
+				var ico = GetValue () as System.Drawing.Icon;
+				if (ico != null) {
+					var sizedIco = new System.Drawing.Icon (ico, width, height);
+					thumbnail = sizedIco.ToBitmap ();
+				}
+			} catch {
 			}
 			return thumbnail;
 		}

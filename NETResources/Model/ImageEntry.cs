@@ -62,8 +62,8 @@ namespace MonoDevelop.NETResources {
 				throw new ArgumentException ("name", "should not be empty");
 			if (_fileName == null)
 				throw new ArgumentNullException ("fileName");
-			//if (_fileName.EndsWith (".ico"))
-			//	throw new ArgumentException ("fileName", "must point to a .ico file");
+			if (_fileName.EndsWith (".ico"))
+				throw new ArgumentException ("fileName", "should not point to a .ico file");
 			if (_owner == null)
 				throw new ArgumentNullException ("owner");
 			
@@ -83,10 +83,13 @@ namespace MonoDevelop.NETResources {
 			if (thumbnail != null)
 				return thumbnail;
 
-			var bmp = GetValue () as System.Drawing.Bitmap; //FIXME: error handling?
-			if (bmp != null) {
-				thumbnail = bmp.GetThumbnailImage (width, height, delegate () {
-					return false;}, IntPtr.Zero) as Bitmap; // delegate never called
+			try {
+				var bmp = GetValue () as System.Drawing.Bitmap;
+				if (bmp != null) {
+					thumbnail = bmp.GetThumbnailImage (width, height, delegate () {
+						return false;}, IntPtr.Zero) as Bitmap; // delegate never called
+				}
+			} catch {
 			}
 			return thumbnail;
 		}
