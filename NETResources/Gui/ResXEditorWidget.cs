@@ -282,7 +282,6 @@ namespace MonoDevelop.NETResources {
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			var crText = cell as CellRendererText;
 			crText.Text = sre.GetBaseString ();
-			crText.Style = Pango.Style.Italic;
 		}
 		
 		void valueDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
@@ -290,6 +289,18 @@ namespace MonoDevelop.NETResources {
 		{
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			((CellRendererText) cell).Text = sre.Value;
+		}
+		// put Value cell in edit mode instead of the one clicked
+		void DeferEditing (object o, EditingStartedArgs args)
+		{
+			Gtk.TreeIter iter;
+			store.GetIter (out iter, new Gtk.TreePath (args.Path));
+
+			GLib.Idle.Add ( delegate () {
+				((Gtk.CellRendererText) o).StopEditing (true);
+				entriesTV.SetCursor (new TreePath (args.Path), entriesTV.Columns [2], true);
+				return false;
+			});
 		}
 		
 		void commentDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
@@ -324,6 +335,9 @@ namespace MonoDevelop.NETResources {
 			CellRendererText cell = new CellRendererText ();
 			//cell.Ellipsize = Pango.EllipsizeMode.End;
 			cell.WrapMode = Pango.WrapMode.Word;
+
+			cell.Editable = true;
+			cell.EditingStarted += DeferEditing;
 
 			column.AddNotification ("width", columnWidthChanged);
 			column.PackStart (cell, true);
@@ -499,8 +513,8 @@ namespace MonoDevelop.NETResources {
 			store.AppendValues (newEntry);
 			store.AppendValues (Inserter);
 			rowSelect = currentPath;
-			if (currentPath != null)
-				GLib.Idle.Add (ReturnToRowSelect); // causes scroll downward revealing next blank entry
+			//if (currentPath != null)
+				//GLib.Idle.Add (ReturnToRowSelect); // causes scroll downward revealing next blank entry
 		}
 
 		void RemoveEntry (ResourceEntry entry)
@@ -721,6 +735,7 @@ namespace MonoDevelop.NETResources {
 					object obj = model.GetValue (iter, 0);
 					if (obj == Inserter) {
 						entriesTV.Selection.SelectPath (path);
+						entriesTV.ScrollToCell (path, entriesTV.Columns [0], true, 0, 0);
 						return true; // stops further iterations
 					} else
 						return false;

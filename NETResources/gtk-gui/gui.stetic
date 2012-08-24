@@ -183,7 +183,7 @@ Public Class</property>
           <widget class="Gtk.Notebook" id="pagesNotebook">
             <property name="MemberName" />
             <property name="CanFocus">True</property>
-            <property name="CurrentPage">1</property>
+            <property name="CurrentPage">0</property>
             <property name="ShowBorder">False</property>
             <property name="ShowTabs">False</property>
             <child>
@@ -218,6 +218,35 @@ Public Class</property>
                       <packing>
                         <property name="Position">1</property>
                         <property name="AutoSize">True</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="Gtk.Label" id="BaseValueLabel">
+                        <property name="MemberName" />
+                        <property name="Xalign">1</property>
+                        <property name="LabelProp" translatable="yes">Display Base Values</property>
+                      </widget>
+                      <packing>
+                        <property name="Position">2</property>
+                        <property name="AutoSize">True</property>
+                        <property name="Expand">False</property>
+                        <property name="Fill">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <widget class="Gtk.ComboBox" id="BaseValueCombo">
+                        <property name="MemberName" />
+                        <property name="IsTextCombo">True</property>
+                        <property name="Items" translatable="yes">Yes
+No</property>
+                        <property name="Active">0</property>
+                        <signal name="Changed" handler="OnBaseValueComboChanged" />
+                      </widget>
+                      <packing>
+                        <property name="Position">3</property>
+                        <property name="AutoSize">True</property>
+                        <property name="Expand">False</property>
+                        <property name="Fill">False</property>
                       </packing>
                     </child>
                   </widget>

@@ -24,6 +24,8 @@ namespace MonoDevelop.NETResources
 		private global::Gtk.HBox hbox1;
 		private global::Gtk.Label FilterLabel;
 		private global::MonoDevelop.Components.SearchEntry filterSearchEntry;
+		private global::Gtk.Label BaseValueLabel;
+		private global::Gtk.ComboBox BaseValueCombo;
 		private global::Gtk.ScrolledWindow entriesScrolledWindow;
 		private global::Gtk.TreeView entriesTV;
 		private global::MonoDevelop.NETResources.ResXObjectIconWidget objectIconWidget;
@@ -59,25 +61,25 @@ namespace MonoDevelop.NETResources
 			this.ImagesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Images");
 			w2.Add (this.ImagesAction, null);
 			this.IconsAction = new global::Gtk.RadioAction ("IconsAction", global::Mono.Unix.Catalog.GetString ("Icons"), null, null, 0);
-			this.IconsAction.Group = this.ImagesAction.Group;
+			this.IconsAction.Group = this.StringsAction.Group;
 			this.IconsAction.HideIfEmpty = false;
 			this.IconsAction.IsImportant = true;
 			this.IconsAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Icons");
 			w2.Add (this.IconsAction, null);
 			this.AudioAction = new global::Gtk.RadioAction ("AudioAction", global::Mono.Unix.Catalog.GetString ("Audio"), null, null, 0);
-			this.AudioAction.Group = this.ImagesAction.Group;
+			this.AudioAction.Group = this.IconsAction.Group;
 			this.AudioAction.HideIfEmpty = false;
 			this.AudioAction.IsImportant = true;
 			this.AudioAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Audio");
 			w2.Add (this.AudioAction, null);
 			this.OtherFilesAction = new global::Gtk.RadioAction ("OtherFilesAction", global::Mono.Unix.Catalog.GetString ("Other Files"), null, null, 0);
-			this.OtherFilesAction.Group = this.ImagesAction.Group;
+			this.OtherFilesAction.Group = this.IconsAction.Group;
 			this.OtherFilesAction.HideIfEmpty = false;
 			this.OtherFilesAction.IsImportant = true;
 			this.OtherFilesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Files");
 			w2.Add (this.OtherFilesAction, null);
 			this.OtherEmbeddedAction = new global::Gtk.RadioAction ("OtherEmbeddedAction", global::Mono.Unix.Catalog.GetString ("Other Embedded"), null, null, 0);
-			this.OtherEmbeddedAction.Group = this.ImagesAction.Group;
+			this.OtherEmbeddedAction.Group = this.OtherFilesAction.Group;
 			this.OtherEmbeddedAction.HideIfEmpty = false;
 			this.OtherEmbeddedAction.IsImportant = true;
 			this.OtherEmbeddedAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Embedded");
@@ -173,7 +175,7 @@ namespace MonoDevelop.NETResources
 			this.pagesNotebook = new global::Gtk.Notebook ();
 			this.pagesNotebook.CanFocus = true;
 			this.pagesNotebook.Name = "pagesNotebook";
-			this.pagesNotebook.CurrentPage = 1;
+			this.pagesNotebook.CurrentPage = 0;
 			this.pagesNotebook.ShowBorder = false;
 			this.pagesNotebook.ShowTabs = false;
 			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
@@ -204,11 +206,32 @@ namespace MonoDevelop.NETResources
 			this.hbox1.Add (this.filterSearchEntry);
 			global::Gtk.Box.BoxChild w25 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.filterSearchEntry]));
 			w25.Position = 1;
-			this.vbox2.Add (this.hbox1);
-			global::Gtk.Box.BoxChild w26 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox1]));
-			w26.Position = 0;
+			// Container child hbox1.Gtk.Box+BoxChild
+			this.BaseValueLabel = new global::Gtk.Label ();
+			this.BaseValueLabel.Name = "BaseValueLabel";
+			this.BaseValueLabel.Xalign = 1F;
+			this.BaseValueLabel.LabelProp = global::Mono.Unix.Catalog.GetString ("Display Base Values");
+			this.hbox1.Add (this.BaseValueLabel);
+			global::Gtk.Box.BoxChild w26 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.BaseValueLabel]));
+			w26.Position = 2;
 			w26.Expand = false;
 			w26.Fill = false;
+			// Container child hbox1.Gtk.Box+BoxChild
+			this.BaseValueCombo = global::Gtk.ComboBox.NewText ();
+			this.BaseValueCombo.AppendText (global::Mono.Unix.Catalog.GetString ("Yes"));
+			this.BaseValueCombo.AppendText (global::Mono.Unix.Catalog.GetString ("No"));
+			this.BaseValueCombo.Name = "BaseValueCombo";
+			this.BaseValueCombo.Active = 0;
+			this.hbox1.Add (this.BaseValueCombo);
+			global::Gtk.Box.BoxChild w27 = ((global::Gtk.Box.BoxChild)(this.hbox1 [this.BaseValueCombo]));
+			w27.Position = 3;
+			w27.Expand = false;
+			w27.Fill = false;
+			this.vbox2.Add (this.hbox1);
+			global::Gtk.Box.BoxChild w28 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.hbox1]));
+			w28.Position = 0;
+			w28.Expand = false;
+			w28.Fill = false;
 			// Container child vbox2.Gtk.Box+BoxChild
 			this.entriesScrolledWindow = new global::Gtk.ScrolledWindow ();
 			this.entriesScrolledWindow.CanFocus = true;
@@ -220,16 +243,16 @@ namespace MonoDevelop.NETResources
 			this.entriesTV.Name = "entriesTV";
 			this.entriesScrolledWindow.Add (this.entriesTV);
 			this.vbox2.Add (this.entriesScrolledWindow);
-			global::Gtk.Box.BoxChild w28 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
-			w28.Position = 1;
+			global::Gtk.Box.BoxChild w30 = ((global::Gtk.Box.BoxChild)(this.vbox2 [this.entriesScrolledWindow]));
+			w30.Position = 1;
 			this.pagesNotebook.Add (this.vbox2);
 			// Container child pagesNotebook.Gtk.Notebook+NotebookChild
 			this.objectIconWidget = new global::MonoDevelop.NETResources.ResXObjectIconWidget ();
 			this.objectIconWidget.Events = ((global::Gdk.EventMask)(256));
 			this.objectIconWidget.Name = "objectIconWidget";
 			this.pagesNotebook.Add (this.objectIconWidget);
-			global::Gtk.Notebook.NotebookChild w30 = ((global::Gtk.Notebook.NotebookChild)(this.pagesNotebook [this.objectIconWidget]));
-			w30.Position = 1;
+			global::Gtk.Notebook.NotebookChild w32 = ((global::Gtk.Notebook.NotebookChild)(this.pagesNotebook [this.objectIconWidget]));
+			w32.Position = 1;
 			// Notebook tab
 			this.label4 = new global::Gtk.Label ();
 			this.label4.Name = "label4";
@@ -237,8 +260,8 @@ namespace MonoDevelop.NETResources
 			this.pagesNotebook.SetTabLabel (this.objectIconWidget, this.label4);
 			this.label4.ShowAll ();
 			this.vbox1.Add (this.pagesNotebook);
-			global::Gtk.Box.BoxChild w31 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.pagesNotebook]));
-			w31.Position = 1;
+			global::Gtk.Box.BoxChild w33 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.pagesNotebook]));
+			w33.Position = 1;
 			// Container child vbox1.Gtk.Box+BoxChild
 			this.hbox3 = new global::Gtk.HBox ();
 			this.hbox3.Name = "hbox3";
@@ -249,13 +272,13 @@ namespace MonoDevelop.NETResources
 			this.selectorTB.Name = "selectorTB";
 			this.selectorTB.ShowArrow = false;
 			this.hbox3.Add (this.selectorTB);
-			global::Gtk.Box.BoxChild w32 = ((global::Gtk.Box.BoxChild)(this.hbox3 [this.selectorTB]));
-			w32.Position = 0;
+			global::Gtk.Box.BoxChild w34 = ((global::Gtk.Box.BoxChild)(this.hbox3 [this.selectorTB]));
+			w34.Position = 0;
 			this.vbox1.Add (this.hbox3);
-			global::Gtk.Box.BoxChild w33 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.hbox3]));
-			w33.Position = 2;
-			w33.Expand = false;
-			w33.Fill = false;
+			global::Gtk.Box.BoxChild w35 = ((global::Gtk.Box.BoxChild)(this.vbox1 [this.hbox3]));
+			w35.Position = 2;
+			w35.Expand = false;
+			w35.Fill = false;
 			this.Add (this.vbox1);
 			if ((this.Child != null)) {
 				this.Child.ShowAll ();
@@ -271,6 +294,7 @@ namespace MonoDevelop.NETResources
 			this.AddBtn.Clicked += new global::System.EventHandler (this.OnAddBtnClick);
 			this.DeleteBtn.Clicked += new global::System.EventHandler (this.OnDeleteBtnClick);
 			this.CodeGenCombo.Changed += new global::System.EventHandler (this.OnCodeGenComboChanged);
+			this.BaseValueCombo.Changed += new global::System.EventHandler (this.OnBaseValueComboChanged);
 		}
 	}
 }
