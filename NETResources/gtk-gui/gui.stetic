@@ -162,7 +162,6 @@
 Internal Class
 Public Class</property>
                 <property name="Active">0</property>
-                <signal name="Changed" handler="OnCodeGenComboChanged" />
               </widget>
               <packing>
                 <property name="Position">3</property>

@@ -48,6 +48,7 @@ using MonoDevelop.Components.PropertyGrid;
 using MonoDevelop.Projects;
 using MonoDevelop.AspNet;
 using MonoDevelop.AspNet.Mvc;
+using MonoDevelop.Components.PropertyGrid.PropertyEditors;
 
 namespace MonoDevelop.NETResources {
 	[System.ComponentModel.ToolboxItem(true)]
@@ -145,10 +146,14 @@ namespace MonoDevelop.NETResources {
 			entriesTV.Model = store;
 			// setup columns
 
-			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Name", 0, nameDataFunc, nameEditedHandler));
-			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("BaseValue", 1, baseValueDataFunc));
-			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Value", 2, valueDataFunc, valueEditedHandler));
-			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Comment", 3, commentDataFunc, commentEditedHandler));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Name", "Name", 0, nameDataFunc, 
+			                                                  nameEditedHandler));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("BaseValue", "BaseValue", 1, 
+			                                                  baseValueDataFunc));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Value", "Value", 2, valueDataFunc, 
+			                                                  valueEditedHandler));
+			entriesTV.AppendColumn (GetEntriesTreeViewColumn ("Comment", "Comment", 3, commentDataFunc, 
+			                                                  commentEditedHandler));
 
 			entriesTV.Selection.Changed += OnEntrySelected;
 
@@ -291,6 +296,7 @@ namespace MonoDevelop.NETResources {
 			((CellRendererText) cell).Text = sre.Value;
 		}
 		// put Value cell in edit mode instead of the one clicked
+		[GLib.ConnectBefore] // - FIXME: cell still momentarily goes into edit mode
 		void DeferEditing (object o, EditingStartedArgs args)
 		{
 			Gtk.TreeIter iter;
@@ -298,7 +304,8 @@ namespace MonoDevelop.NETResources {
 
 			GLib.Idle.Add ( delegate () {
 				((Gtk.CellRendererText) o).StopEditing (true);
-				entriesTV.SetCursor (new TreePath (args.Path), entriesTV.Columns [2], true);
+				entriesTV.SetCursorOnCell (new TreePath (args.Path), entriesTV.Columns [2],
+				                           entriesTV.Columns [2].Cells [1], true);
 				return false;
 			});
 		}
@@ -321,33 +328,10 @@ namespace MonoDevelop.NETResources {
 				crText.Text = sre.Comment;
 			}
 		}
-
-		TreeViewColumn GetEntriesTreeViewColumn (string title, int sortColumnId, TreeCellDataFunc treeCellDataFunc)
-		{
-			TreeViewColumn column = new TreeViewColumn ();
-			column.Expand = true;
-			column.SortIndicator = true;
-			column.SortColumnId = sortColumnId;
-			column.Sizing = TreeViewColumnSizing.Fixed;
-			column.Resizable = true;
-
-			column.Title = GettextCatalog.GetString (title);
-			CellRendererText cell = new CellRendererText ();
-			//cell.Ellipsize = Pango.EllipsizeMode.End;
-			cell.WrapMode = Pango.WrapMode.Word;
-
-			cell.Editable = true;
-			cell.EditingStarted += DeferEditing;
-
-			column.AddNotification ("width", columnWidthChanged);
-			column.PackStart (cell, true);
-			column.SetCellDataFunc (cell, treeCellDataFunc);
-			return column;
-		}
-
-		TreeViewColumn GetEntriesTreeViewColumn (string title, int sortColumnId, 
+		//columnId used to identify which column was clicked later, hacky solution
+		TreeViewColumn GetEntriesTreeViewColumn (string title, string columnID, int sortColumnId, 
 		                                         TreeCellDataFunc treeCellDataFunc,
-		                                         EditedHandler editHandler)
+		                                         EditedHandler editHandler = null)
 		{
 			TreeViewColumn column = new TreeViewColumn ();
 			column.Expand = true;
@@ -355,20 +339,33 @@ namespace MonoDevelop.NETResources {
 			column.SortColumnId = sortColumnId;
 			column.Sizing = TreeViewColumnSizing.Fixed;
 			column.Resizable = true;
-
 			column.Title = GettextCatalog.GetString (title);
-			CellRendererText cell = new CellRendererText ();
+			column.Data.Add ("columnID", columnID);
+
+			CellRendererText textCell = new CellRendererText ();
 			//cell.Ellipsize = Pango.EllipsizeMode.End;
-			cell.Editable = true;
-			cell.WrapMode = Pango.WrapMode.Word;
+			textCell.WrapMode = Pango.WrapMode.Word;
+			textCell.Editable = true;
+
+			if (editHandler == null)
+				textCell.EditingStarted += DeferEditing;
+			else
+				textCell.Edited += editHandler;
+
+			var p = Gtk.IconTheme.Default.LoadIcon ("gtk-zoom-in", 16, (IconLookupFlags) 0);
+			
+			CellRendererButton zoomCell = new CellRendererButton (p);
+			zoomCell.Clicked += OnZoomCellClick;
+			zoomCell.Data.Add ("columnID", columnID);
 
 			column.AddNotification ("width", columnWidthChanged);
-			column.PackStart (cell, true);
+			column.PackStart (zoomCell, false);
+			column.PackStart (textCell, true);
+			column.SetCellDataFunc (textCell, treeCellDataFunc);
 
-			column.SetCellDataFunc (cell, treeCellDataFunc);
-			cell.Edited += editHandler;
 			return column;
 		}
+
 		#region Handle Column Resizing
 		//to store column widths to bypass odd autoresizing causes by model reload later
 		struct ColumnWidths {
@@ -376,12 +373,10 @@ namespace MonoDevelop.NETResources {
 			public int BaseValue;
 			public int Value;
 			public int Comment;
-			// flag to let columnWidthChanged know it was called in response to restore
-			public bool Restoring; 
 		}
-
+		
 		ColumnWidths columnWidths;
-
+		
 		void StoreColumnWidths ()
 		{
 			columnWidths.Name = entriesTV.Columns [0].Width;
@@ -403,12 +398,16 @@ namespace MonoDevelop.NETResources {
 		{
 			//assumes 1 cell renderer per column and its a ...Text
 			var col = (TreeViewColumn) sender;
-			var crText = (CellRendererText) col.Cells [0];
+			var crText = (CellRendererText) col.Cells [1];
 			//FIXME: hacky
-			if ((crText.WrapWidth > col.Width -15 && crText.WrapWidth < col.Width - 5) || col.Width < 10)
+			int wrapRightPad = 26;
+
+			if ((crText.WrapWidth > col.Width -(wrapRightPad + 5) && 
+			     crText.WrapWidth < col.Width - (wrapRightPad - 5)) 
+			    || col.Width < wrapRightPad)
 				return;
 
-			crText.WrapWidth = col.Width - 10;
+			crText.WrapWidth = col.Width - wrapRightPad;
 			// model needs reset so rows are regenerated to have correct heights to display wrapped 
 			// lines. This has side effect of causing column widths to be regenerated and packed 
 			// inside viewbale window, thus store / restore column widths
@@ -427,11 +426,13 @@ namespace MonoDevelop.NETResources {
 			var resEntry = entry as ResourceEntry;
 			if (resEntry == null)
 				return;
+			entriesTV.HoverSelection = false; //so row stays highlighted
 
 			Gtk.Menu contextMenu = CreateContextMenu (RemoveEntry, resEntry);
 			if (contextMenu != null)
 				GtkWorkarounds.ShowContextMenu (contextMenu, this, evt);
 
+			entriesTV.HoverSelection = true;
 		}
 
 		public delegate void RemoveEntryFunc (ResourceEntry entry);
@@ -461,6 +462,61 @@ namespace MonoDevelop.NETResources {
 				return false;
 			} else
 				return true;
+		}
+
+		void OnZoomCellClick (object sender, EventArgs e)
+		{	
+			var cell = (CellRendererButton) sender;
+			var entry = SelectedEntry;
+			var path = store.GetPath (SelectedIter);
+			var columnID = (string) cell.Data ["columnID"];
+
+			string oldStr, newStr;
+			// turning hoverslection off temporarily so row remains highlighted behind popup
+			entriesTV.HoverSelection = false;
+			if (columnID == "Name")
+				oldStr = entry.Name;
+			else if (columnID == "BaseValue")
+				oldStr = entry.GetBaseString ();
+			else if (columnID == "Value")
+				oldStr = entry.Value;
+			else if (columnID == "Comment")
+				oldStr = entry.Comment;
+			else
+				throw new Exception ("Not setup for this column");
+
+			int response;
+
+			using (var dialog = new TextEditorDialog ()) {
+				dialog.Text = oldStr;
+				dialog.TransientFor = this.Toplevel as Gtk.Window;
+				response = dialog.Run ();
+				newStr = dialog.Text;
+			}
+
+			bool editMode; // whether to put cell in edit mode when selecting row again
+
+			if ((response == (int) ResponseType.Ok) && (oldStr != newStr)) {
+				if (columnID == "Name") {
+					if (ValidateName (oldStr, newStr, (entry == Inserter)))
+						entry.Name = newStr;
+				} 
+				else if (columnID == "Value")
+					entry.Value = newStr;
+				else if (columnID == "Comment")
+					entry.Comment = newStr;
+				editMode = true;
+			} else
+				editMode = false;
+
+			// select row, optionally put cell in edit mode (putting basevalue in edit mode triggers  
+			// its EditingStarted handler which currently defers editing to the value column)
+			GLib.Idle.Add ( delegate () {
+				var col = entriesTV.Columns.Single (c=> (string) c.Data ["columnID"] == columnID);
+				entriesTV.SetCursorOnCell (path, col, col.Cells [1], editMode);
+				entriesTV.HoverSelection = true; // turn on at end to avoid selection jumping about
+				return false;
+			});
 		}
 
 		#region Funcs for Idle delegate
@@ -735,7 +791,8 @@ namespace MonoDevelop.NETResources {
 					object obj = model.GetValue (iter, 0);
 					if (obj == Inserter) {
 						entriesTV.Selection.SelectPath (path);
-						entriesTV.ScrollToCell (path, entriesTV.Columns [0], true, 0, 0);
+						entriesTV.SetCursorOnCell (path, entriesTV.Columns [0],
+						                           entriesTV.Columns [0].Cells [1], true);
 						return true; // stops further iterations
 					} else
 						return false;

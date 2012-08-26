@@ -125,6 +125,7 @@
     <Compile Include="Gui\ResXEditorWidget.cs" />
     <Compile Include="Gui\ResXObjectIconWidget.cs" />
     <Compile Include="Model\IThumbnailProvider.cs" />
+    <Compile Include="Gui\CellRendererButton.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

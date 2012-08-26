@@ -61,25 +61,25 @@ namespace MonoDevelop.NETResources
 			this.ImagesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Images");
 			w2.Add (this.ImagesAction, null);
 			this.IconsAction = new global::Gtk.RadioAction ("IconsAction", global::Mono.Unix.Catalog.GetString ("Icons"), null, null, 0);
-			this.IconsAction.Group = this.StringsAction.Group;
+			this.IconsAction.Group = this.ImagesAction.Group;
 			this.IconsAction.HideIfEmpty = false;
 			this.IconsAction.IsImportant = true;
 			this.IconsAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Icons");
 			w2.Add (this.IconsAction, null);
 			this.AudioAction = new global::Gtk.RadioAction ("AudioAction", global::Mono.Unix.Catalog.GetString ("Audio"), null, null, 0);
-			this.AudioAction.Group = this.IconsAction.Group;
+			this.AudioAction.Group = this.ImagesAction.Group;
 			this.AudioAction.HideIfEmpty = false;
 			this.AudioAction.IsImportant = true;
 			this.AudioAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Audio");
 			w2.Add (this.AudioAction, null);
 			this.OtherFilesAction = new global::Gtk.RadioAction ("OtherFilesAction", global::Mono.Unix.Catalog.GetString ("Other Files"), null, null, 0);
-			this.OtherFilesAction.Group = this.IconsAction.Group;
+			this.OtherFilesAction.Group = this.ImagesAction.Group;
 			this.OtherFilesAction.HideIfEmpty = false;
 			this.OtherFilesAction.IsImportant = true;
 			this.OtherFilesAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Files");
 			w2.Add (this.OtherFilesAction, null);
 			this.OtherEmbeddedAction = new global::Gtk.RadioAction ("OtherEmbeddedAction", global::Mono.Unix.Catalog.GetString ("Other Embedded"), null, null, 0);
-			this.OtherEmbeddedAction.Group = this.OtherFilesAction.Group;
+			this.OtherEmbeddedAction.Group = this.ImagesAction.Group;
 			this.OtherEmbeddedAction.HideIfEmpty = false;
 			this.OtherEmbeddedAction.IsImportant = true;
 			this.OtherEmbeddedAction.ShortLabel = global::Mono.Unix.Catalog.GetString ("Other Embedded");
@@ -293,7 +293,6 @@ namespace MonoDevelop.NETResources
 			this.OtherEmbeddedAction.Activated += new global::System.EventHandler (this.OnSelectorTBActionActivated);
 			this.AddBtn.Clicked += new global::System.EventHandler (this.OnAddBtnClick);
 			this.DeleteBtn.Clicked += new global::System.EventHandler (this.OnDeleteBtnClick);
-			this.CodeGenCombo.Changed += new global::System.EventHandler (this.OnCodeGenComboChanged);
 			this.BaseValueCombo.Changed += new global::System.EventHandler (this.OnBaseValueComboChanged);
 		}
 	}
