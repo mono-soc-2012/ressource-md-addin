@@ -81,6 +81,16 @@ namespace MonoDevelop.NETResources {
 			}
 		}
 
+		TreePath SelectedPath {
+			get {
+				TreeIter iter = SelectedIter;
+				if (!iter.Equals (Gtk.TreeIter.Zero))
+					return store.GetPath (iter);
+				else
+					return null;
+			}
+		}
+
 		IStringResourceDisplay SelectedEntry {
 			get {
 				TreeIter iter = SelectedIter;
@@ -156,7 +166,6 @@ namespace MonoDevelop.NETResources {
 			                                                  commentEditedHandler));
 
 			entriesTV.Selection.Changed += OnEntrySelected;
-
 			store.SetSortColumnId (0, SortType.Ascending);
 
 			entriesTV.HoverSelection = true;
@@ -241,18 +250,22 @@ namespace MonoDevelop.NETResources {
 
 			pf.Project.Files.Remove (pf.Project.GetProjectFile (lastOutput));
 		}
-		
+
 		void nameEditedHandler (object o, Gtk.EditedArgs args) 
 		{
 			Gtk.TreeIter iter;
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
-			if (ValidateName (sre.Name, args.NewText, (sre is InserterRow)))
+			if (ValidateName (sre.Name, args.NewText, (sre is InserterRow))) {
+				string oldStr = sre.Name;
 				sre.Name = args.NewText;
-			else {
-				lastinvalidPath = new TreePath (args.Path);
-				GLib.Idle.Add (KeepFocusOnInvalidName);
+				CorrectRowHeights ((CellRendererText) o, oldStr, args.NewText);
+			} else {
+				GLib.Idle.Add (delegate () {
+					KeepFocusOnInvalidName (new TreePath (args.Path));
+					return false;
+				});
 			}
 		}
 
@@ -262,7 +275,9 @@ namespace MonoDevelop.NETResources {
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
+			string oldStr = sre.Value;
 			sre.Value = args.NewText;
+			CorrectRowHeights ((CellRendererText) o, oldStr, args.NewText);
 		}
 
 		void commentEditedHandler (object o, Gtk.EditedArgs args) 
@@ -271,7 +286,9 @@ namespace MonoDevelop.NETResources {
 			store.GetIter (out iter, new Gtk.TreePath (args.Path));
 		 	
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
+			string oldStr = sre.Comment;
 			sre.Comment = args.NewText;
+			CorrectRowHeights ((CellRendererText) o, oldStr, args.NewText);
 		}
 
 		void nameDataFunc (TreeViewColumn tree_column, CellRenderer cell, 
@@ -295,6 +312,7 @@ namespace MonoDevelop.NETResources {
 			var sre = (IStringResourceDisplay) store.GetValue (iter, 0);
 			((CellRendererText) cell).Text = sre.Value;
 		}
+
 		// put Value cell in edit mode instead of the one clicked
 		[GLib.ConnectBefore] // - FIXME: cell still momentarily goes into edit mode
 		void DeferEditing (object o, EditingStartedArgs args)
@@ -328,6 +346,7 @@ namespace MonoDevelop.NETResources {
 				crText.Text = sre.Comment;
 			}
 		}
+
 		//columnId used to identify which column was clicked later, hacky solution
 		TreeViewColumn GetEntriesTreeViewColumn (string title, string columnID, int sortColumnId, 
 		                                         TreeCellDataFunc treeCellDataFunc,
@@ -358,7 +377,7 @@ namespace MonoDevelop.NETResources {
 			zoomCell.Clicked += OnZoomCellClick;
 			zoomCell.Data.Add ("columnID", columnID);
 
-			column.AddNotification ("width", columnWidthChanged);
+			column.AddNotification ("width", OnColumnWidthChanged);
 			column.PackStart (zoomCell, false);
 			column.PackStart (textCell, true);
 			column.SetCellDataFunc (textCell, treeCellDataFunc);
@@ -366,7 +385,7 @@ namespace MonoDevelop.NETResources {
 			return column;
 		}
 
-		#region Handle Column Resizing
+		#region Handle Column / Row Resizing, Ensuring enough room for wrapped text
 		//to store column widths to bypass odd autoresizing causes by model reload later
 		struct ColumnWidths {
 			public int Name;
@@ -394,7 +413,45 @@ namespace MonoDevelop.NETResources {
 			entriesTV.Columns [3].FixedWidth = columnWidths.Comment;
 		}
 
-		void columnWidthChanged (object sender, GLib.NotifyArgs args)
+		void CorrectRowHeights (CellRendererText cell, string oldStr, string newStr)
+		{
+			int oldLines = GetNoLines (cell, oldStr);
+			int newLines = GetNoLines (cell, newStr);
+			if (newLines != oldLines)
+				ResizeRows (true);
+		}
+
+		void ResizeRows (bool keepScrollPos)
+		{
+			// model needs reset so rows are regenerated to have correct heights to display wrapped 
+			// lines. This has side effect of causing column widths to be regenerated and packed 
+			// inside viewable window, thus store / restore column widths
+
+			var path = SelectedPath;
+			var vAdj = entriesScrolledWindow.Vadjustment;
+			GLib.Idle.Add (delegate {
+				StoreColumnWidths ();
+				entriesTV.Model = null;
+				entriesTV.Model = store;
+				RestoreColumnWidths ();
+				if (keepScrollPos)
+					entriesTV.SetScrollAdjustments (null, vAdj);
+				return false;
+			});
+		}
+
+		int GetNoLines (CellRendererText cell, string text)
+		{
+			var layout = CreatePangoLayout (null);
+			
+			layout.Wrap = Pango.WrapMode.Word;
+			layout.Width = Pango.Units.FromPixels (cell.WrapWidth);
+			layout.SetText (text);
+			
+			return layout.LineCount;
+		}
+
+		void OnColumnWidthChanged (object sender, GLib.NotifyArgs args)
 		{
 			//assumes 1 cell renderer per column and its a ...Text
 			var col = (TreeViewColumn) sender;
@@ -408,13 +465,8 @@ namespace MonoDevelop.NETResources {
 				return;
 
 			crText.WrapWidth = col.Width - wrapRightPad;
-			// model needs reset so rows are regenerated to have correct heights to display wrapped 
-			// lines. This has side effect of causing column widths to be regenerated and packed 
-			// inside viewbale window, thus store / restore column widths
-			StoreColumnWidths ();
-			entriesTV.Model = null;
-			entriesTV.Model = store;
-			RestoreColumnWidths ();
+			// keeping scroll pos interferes with col resizing due to frequency of calls to method
+			ResizeRows (false); 
 		}
 		#endregion
 
@@ -468,7 +520,7 @@ namespace MonoDevelop.NETResources {
 		{	
 			var cell = (CellRendererButton) sender;
 			var entry = SelectedEntry;
-			var path = store.GetPath (SelectedIter);
+			var path = SelectedPath;
 			var columnID = (string) cell.Data ["columnID"];
 
 			string oldStr, newStr;
@@ -509,25 +561,22 @@ namespace MonoDevelop.NETResources {
 			} else
 				editMode = false;
 
+			var col = entriesTV.Columns.Single (c=> (string) c.Data ["columnID"] == columnID);
+			// CorrectRowHeights may add a task to idle, if so it needs to run first or cell wont go to edit mode
+			CorrectRowHeights ((CellRendererText) col.Cells [1], oldStr, newStr);
 			// select row, optionally put cell in edit mode (putting basevalue in edit mode triggers  
 			// its EditingStarted handler which currently defers editing to the value column)
 			GLib.Idle.Add ( delegate () {
-				var col = entriesTV.Columns.Single (c=> (string) c.Data ["columnID"] == columnID);
 				entriesTV.SetCursorOnCell (path, col, col.Cells [1], editMode);
 				entriesTV.HoverSelection = true; // turn on at end to avoid selection jumping about
 				return false;
 			});
 		}
 
-		#region Funcs for Idle delegate
-		//FIXME: using fields for params as cant change method signiture
-		TreePath lastinvalidPath;
-
-		bool KeepFocusOnInvalidName ()
+		void KeepFocusOnInvalidName (TreePath lastinvalidPath)
 		{
 			entriesTV.SetCursor (lastinvalidPath, entriesTV.Columns[0], true);
 			entriesTV.Selection.SelectPath (lastinvalidPath);
-			return false;
 		}
 
 		TreePath rowSelect;
@@ -539,7 +588,7 @@ namespace MonoDevelop.NETResources {
 			entriesTV.ScrollToCell (rowSelect, entriesTV.Columns [0], true, 0, 0) ;
 			return false;
 		}
-		#endregion
+
 		bool inserterWasSelected = false;
 
 		void OnEntrySelected (object sender, EventArgs args)
@@ -773,7 +822,7 @@ namespace MonoDevelop.NETResources {
 			switch (pagesNotebook.CurrentPage) {
 			case 0:
 				// careful, sometimes property pad doesnt update with treeview selected item
-				TreePath treePath = store.GetPath (SelectedIter);
+				TreePath treePath = SelectedPath;
 				store.EmitRowChanged (treePath, SelectedIter);
 				break;
 			case 1:
